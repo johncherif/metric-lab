@@ -1,0 +1,31 @@
+{
+  "traps": [
+    {
+      "id": "s3_lagging",
+      "charts": [
+        "fpd_rate",
+        "chargeoff_rate"
+      ],
+      "weeks": [
+        7,
+        12
+      ],
+      "issue": "lagging",
+      "title": "Early defaults are rising in near-prime Flex Plan, while charge-offs still read zero",
+      "explanation": "Charge-offs cannot appear until about 120 days past due, so a zero charge-off rate 12 weeks after launch says nothing about credit quality. The early-warning signal is the first-payment default rate: for near-prime Flex Plan customers it rose from about 1.8% to over 6% by week 12. Filter to 'Near-prime (below 720)' to see it clearly."
+    },
+    {
+      "id": "s3_cannibal",
+      "charts": [
+        "cannibalization"
+      ],
+      "weeks": [
+        4,
+        12
+      ],
+      "issue": "cannibalization",
+      "title": "Flex Plan growth is partly moved from card balances",
+      "explanation": "Weekly card interest per Flex Plan customer fell from about $21 to under $10, while Flex Plan interest per customer held near $14. Customers are moving balances from a roughly 24% card APR to a 15.99% Flex Plan. Part of the 'new' volume is existing borrowing at a lower rate, so net value is lower than gross volume suggests."
+    }
+  ]
+}

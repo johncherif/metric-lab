@@ -1,0 +1,25 @@
+week,segment,cohort_users,repeat_users,active_users,plans,autopay_plans,band_450_499,band_500_549
+1,Existing cardholders,2608,1043,4041,7999,3680,698,206
+1,New to Harborline credit,6084,1148,9856,19253,5694,1655,570
+2,Existing cardholders,3033,1178,4973,8106,3715,723,225
+2,New to Harborline credit,5998,1130,9488,15436,4763,1376,420
+3,Existing cardholders,3503,1401,5752,7942,3821,763,242
+3,New to Harborline credit,5466,972,9589,13206,4260,1221,386
+4,Existing cardholders,3777,1476,6424,7816,3877,669,201
+4,New to Harborline credit,5119,946,9184,10701,3558,961,310
+5,Existing cardholders,4216,1569,7753,8677,4363,787,253
+5,New to Harborline credit,4864,853,8591,10235,3523,893,290
+6,Existing cardholders,4383,1593,8423,9484,4926,810,252
+6,New to Harborline credit,4403,736,8445,9644,3422,886,254
+7,Existing cardholders,4811,1736,9364,10734,5595,908,293
+7,New to Harborline credit,3901,638,7822,9048,3227,747,289
+8,Existing cardholders,5364,1885,10539,12017,6470,1020,360
+8,New to Harborline credit,3881,608,7493,8533,3080,787,222
+9,Existing cardholders,5351,1910,11550,13107,7185,1139,344
+9,New to Harborline credit,3330,492,7098,8239,3097,780,263
+10,Existing cardholders,6009,1953,12874,14808,8234,1277,441
+10,New to Harborline credit,3073,501,6379,7351,2840,671,209
+11,Existing cardholders,6510,2199,13885,16204,9250,1482,439
+11,New to Harborline credit,2650,402,5852,6621,2641,586,193
+12,Existing cardholders,6871,2303,15157,17113,9842,1594,486
+12,New to Harborline credit,2346,320,5087,5808,2330,539,140

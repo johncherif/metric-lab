@@ -1,0 +1,32 @@
+{
+  "traps": [
+    {
+      "id": "s1_base",
+      "charts": [
+        "creation_rate",
+        "impressions",
+        "plans_by_product"
+      ],
+      "weeks": [
+        5,
+        12
+      ],
+      "issue": "base_changed",
+      "title": "The plan creation rate fell because the base changed",
+      "explanation": "Eligibility was expanded in week 5. Roughly 52,000 newly eligible customers a week started seeing the offer, and they convert at about 1.4%, versus about 4.5% for the original base. The blended rate fell even though the original base kept improving. Filter the dashboard to 'Originally eligible' to see it."
+    },
+    {
+      "id": "s1_optout",
+      "charts": [
+        "optout_rate"
+      ],
+      "weeks": [
+        5,
+        12
+      ],
+      "issue": "guardrail",
+      "title": "The offer opt-out rate (a guardrail) more than doubled",
+      "explanation": "Newly eligible customers opt out of the offer at about 2.2%, versus 0.6% for the original base. A rising opt-out rate signals the offer is reaching people who do not want it, which can harm the customer relationship even while plan counts grow."
+    }
+  ]
+}
