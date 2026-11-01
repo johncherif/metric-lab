@@ -79,9 +79,9 @@ def start_page() -> None:
              "recommendation, the way a real launch review works.")
     st.subheader("The three Flex products")
     st.table(pd.DataFrame([
-        ["Flex 4", "$50 to $499.99", "4 monthly installments", "0% interest, no fee"],
-        ["Flex 4 Plus", "$500 and above", "4 monthly installments", "0% interest, flat $25 fee"],
-        ["Flex Plan", "$500 and above", "6, 12, or 24 monthly installments", "Fixed APR (15.99%)"],
+        ["Flex 4", C.md("$50 to $499.99"), "4 monthly installments", "0% interest, no fee"],
+        ["Flex 4 Plus", C.md("$500 and above"), "4 monthly installments", C.md("0% interest, flat $25 fee")],
+        ["Flex Plan", C.md("$500 and above"), "6, 12, or 24 monthly installments", "Fixed APR (15.99%)"],
     ], columns=["Product", "Purchase size", "Structure", "Cost to customer"]).set_index("Product"))
     st.caption("All product terms are illustrative and do not describe any real institution's products.")
 
@@ -228,6 +228,7 @@ def stage_dashboard(sc: dict) -> None:
     for i, (cid, ch) in enumerate(charts.items()):
         fig = figure(C.chart_frame(sid, ch, seg), ch, shades[cid])
         with cols[i % 2]:
+            st.markdown(f"**{ch['title']}**")
             if submitted:
                 st.plotly_chart(fig, key=f"{sid}_chart_{cid}_done", config={"displayModeBar": False})
             else:
@@ -253,7 +254,8 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     st.session_state.setdefault(f"{sid}_f_conf", 70)
     c1, c2 = st.columns(2)
     with c1:
-        st.selectbox("Chart", list(charts), format_func=lambda c: charts[c]["title"], key=f"{sid}_f_chart")
+        st.selectbox("Chart", list(charts), format_func=lambda c: charts[c]["title"].replace("\\$", "$"),  # plain text, not markdown
+                     key=f"{sid}_f_chart")
         w0, w1 = st.columns(2)
         w0.selectbox("From week", list(range(1, 13)), key=f"{sid}_f_w0")
         w1.selectbox("To week", list(range(1, 13)), key=f"{sid}_f_w1")

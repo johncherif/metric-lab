@@ -1,0 +1,91 @@
+{
+  "id": "scenario3",
+  "order": 3,
+  "title": "Scenario 3: Value",
+  "layer": "Value",
+  "support": {
+    "label": "No support",
+    "walkthrough_traps": [],
+    "highlight_traps": [],
+    "hints": false,
+    "description": "You are on your own: no walkthrough, no highlights, and no hints."
+  },
+  "briefing": {
+    "from": "Priya Shah, Finance Business Partner, Harborline Bank",
+    "subject": "Flex Plan expansion for the quarterly business review",
+    "body": [
+      "Volume financed through Flex has more than doubled in 12 weeks, and Flex Plan, our longer installment plan with interest, is the biggest contributor.",
+      "Charge-offs are at zero so far. Finance proposes expanding Flex Plan to all near-prime customers next quarter.",
+      "Please review the value dashboard and give me your recommendation before the review."
+    ]
+  },
+  "metrics": [
+    {"name": "Volume financed by product, net of expected losses", "role": "success",
+     "feedback": "The value measure that matters: volume adjusted for the losses it is expected to bring. Reading it by product shows which products create value."},
+    {"name": "Net revenue per plan (fees, interest, and interchange minus funding cost and losses)", "role": "success",
+     "feedback": "Unit economics. It shows whether each plan creates value after costs, which gross volume cannot."},
+    {"name": "On-time installment rate", "role": "success",
+     "feedback": "Healthy repayment is part of value for both the bank and the customer. It is a rate with a clear denominator: installments due."},
+    {"name": "Plans originated, by product", "role": "success",
+     "feedback": "Origination volume by product shows where value is coming from. Read it next to risk metrics, never alone."},
+    {"name": "First-payment default rate (first installment missed)", "role": "guardrail",
+     "feedback": "The key early-warning guardrail for credit products. It appears within weeks, long before charge-offs."},
+    {"name": "Share of plans 30 or more days past due", "role": "guardrail",
+     "feedback": "A delinquency guardrail. It shows stress building before it turns into losses."},
+    {"name": "Charge-off rate", "role": "guardrail",
+     "feedback": "The ultimate loss guardrail, but it lags: charge-offs cannot appear until about 120 days past due, so early in a launch it reads zero no matter how risky the book is."},
+    {"name": "Card revolving balances moved into Flex Plan", "role": "guardrail",
+     "feedback": "A cannibalization guardrail. Balances that move from a higher-rate card to Flex Plan are existing borrowing at a lower rate, not new value."},
+    {"name": "Gross volume financed (no adjustment for losses)", "role": "vanity",
+     "feedback": "Gross volume rewards lending more regardless of whether it will be repaid. It overstates value whenever risk or cannibalization is rising."},
+    {"name": "Total plans since launch", "role": "vanity",
+     "feedback": "A cumulative count that can only rise. It says nothing about whether those plans create value."},
+    {"name": "Average purchase size", "role": "vanity",
+     "feedback": "Larger purchases are not more valuable if they default more often or replace card balances."},
+    {"name": "Number of merchants where Flex has been used", "role": "vanity",
+     "feedback": "Breadth of use is interesting for marketing but does not measure value or risk."}
+  ],
+  "segments": ["All customers", "Prime (score 720+)", "Near-prime (below 720)"],
+  "segment_note": "First installments come due about four weeks after a plan opens, so payment and default charts start in week 5.",
+  "charts": [
+    {"id": "volume", "title": "Volume financed by product (weekly)", "kind": "count",
+     "series": [{"label": "Flex 4", "col": "volume_flex4"}, {"label": "Flex 4 Plus", "col": "volume_flex4plus"},
+                {"label": "Flex Plan", "col": "volume_flexplan"}], "yfmt": "$,.0f"},
+    {"id": "fpd_rate", "title": "First-payment default rate by product", "kind": "rate",
+     "series": [{"label": "Flex 4", "num": "fpd_flex4", "den": "due_flex4"},
+                {"label": "Flex 4 Plus", "num": "fpd_flex4plus", "den": "due_flex4plus"},
+                {"label": "Flex Plan", "num": "fpd_flexplan", "den": "due_flexplan"}], "yfmt": ".1%", "ymax": 0.07},
+    {"id": "chargeoff_rate", "title": "Charge-off rate (all products)", "kind": "rate",
+     "series": [{"label": "Charge-off rate", "num": "chargeoffs", "den": "due_all"}], "yfmt": ".1%", "ymax": 0.07},
+    {"id": "cannibalization", "title": "Weekly interest income per Flex Plan customer", "kind": "rate",
+     "series": [{"label": "Card interest", "num": "card_interest_flexplan_users", "den": "flexplan_customers"},
+                {"label": "Flex Plan interest", "num": "flexplan_interest", "den": "flexplan_customers"}],
+     "yfmt": "$,.2f"}
+  ],
+  "walkthrough": {},
+  "hints": {},
+  "decision": {
+    "question": "Should Harborline expand Flex Plan to all near-prime customers next quarter?",
+    "options": {
+      "ship": {"score": 0.0,
+               "feedback": "This expands Flex Plan into exactly the segment where the early-warning signal is rising. A zero charge-off rate is not evidence of safety this early, because charge-offs lag by about four months."},
+      "iterate": {"score": 1.0,
+                  "feedback": "This matches the expert view. Keep what is working, tighten Flex Plan for near-prime customers, and judge value net of expected losses and cannibalized card interest."},
+      "rollback": {"score": 0.5,
+                   "feedback": "Defensible caution, but it overcorrects. Flex 4, Flex 4 Plus, and prime Flex Plan customers all show low, stable early defaults; the problem is concentrated in one product and segment."}
+    },
+    "evidence": [
+      {"id": "e_fpd_np", "text": "First-payment defaults for near-prime Flex Plan customers rose from about 1.8% to over 6%.", "relevant": true},
+      {"id": "e_cannibal", "text": "Card interest per Flex Plan customer fell by more than half.", "relevant": true},
+      {"id": "e_prime_ok", "text": "Early default rates for prime customers and for the 4-installment products stayed low and flat.", "relevant": true},
+      {"id": "e_chargeoff", "text": "The charge-off rate is 0%.", "relevant": false,
+       "why": "Charge-offs cannot occur until about 120 days past due, so 0% at week 12 says nothing about credit quality."},
+      {"id": "e_volume", "text": "Volume financed more than doubled in 12 weeks.", "relevant": false,
+       "why": "Gross volume ignores expected losses and the share of volume moved from card balances."},
+      {"id": "e_ticket", "text": "Flex Plan has the largest average purchase size.", "relevant": false,
+       "why": "Purchase size does not indicate value when the larger plans carry more risk."}
+    ],
+    "required_evidence": ["e_fpd_np", "e_cannibal"],
+    "expert_rationale": "Iterate: do not expand Flex Plan to all near-prime customers; tighten it instead. Volume financed more than doubled, but gross volume overstates value in two ways. First, credit risk is building where losses cannot yet be seen. Charge-offs read 0% only because none can occur until about 120 days past due. The leading indicator, the first-payment default rate, rose for near-prime Flex Plan customers from about 1.8% to over 6% by week 12, while prime customers and the 4-installment products stayed near 1% to 2%. Second, part of Flex Plan volume is cannibalized: weekly card interest per Flex Plan customer fell from about $21 to about $9 as customers moved balances from a roughly 24% card APR to the 15.99% plan. I recommend keeping Flex 4 and Flex 4 Plus as they are, pausing new near-prime Flex Plan approvals or limiting them to the 6-month term, and reporting Flex value net of expected losses and cannibalized card interest. If the near-prime first-payment default rate stays above 3% after the change, Flex Plan should be withdrawn from that segment."
+  }
+}

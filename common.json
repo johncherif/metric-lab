@@ -1,0 +1,59 @@
+{
+  "roles": {
+    "success": "Success metric",
+    "guardrail": "Guardrail (must not get worse)",
+    "vanity": "Vanity or misleading"
+  },
+  "issue_types": {
+    "base_changed": "The base changed (denominator shift)",
+    "segment_reversal": "Groups tell a different story than the total (Simpson's paradox)",
+    "novelty": "Early spike that fades (novelty effect)",
+    "threshold": "Behavior bunches at a rule boundary (threshold effect)",
+    "lagging": "Risk appears late; an early warning signal is rising (lagging indicator)",
+    "cannibalization": "Growth taken from another product (cannibalization)",
+    "guardrail": "A guardrail metric is getting worse"
+  },
+  "decisions": {
+    "ship": "Ship: continue the rollout as is",
+    "iterate": "Iterate: keep the feature but change something specific",
+    "rollback": "Roll back: pull or pause the feature"
+  },
+  "rubric": [
+    {
+      "criterion": "Framework coverage",
+      "levels": [
+        "Considers only one layer (for example, adoption volume).",
+        "Mentions more than one layer but does not connect them.",
+        "Addresses the relevant layer with at least one success metric and one guardrail.",
+        "Weighs success metrics against guardrails and explains how they trade off."
+      ]
+    },
+    {
+      "criterion": "Metric definition quality",
+      "levels": [
+        "Uses counts or vague terms (\"usage is up\").",
+        "Uses rates but without a clear denominator.",
+        "Uses rates with clear, appropriate denominators.",
+        "Uses well-defined rates and checks that the denominator stayed comparable over time."
+      ]
+    },
+    {
+      "criterion": "Guardrail selection",
+      "levels": [
+        "No guardrail considered.",
+        "Names a guardrail but does not check it.",
+        "Checks a relevant guardrail and reports its direction.",
+        "Checks the most relevant guardrail and states a threshold that would change the decision."
+      ]
+    },
+    {
+      "criterion": "Decision rule clarity",
+      "levels": [
+        "Decision stated without reasons.",
+        "Reasons given but not tied to the evidence.",
+        "Decision follows from the cited evidence.",
+        "Decision follows from the evidence and names what would change it or what to monitor next."
+      ]
+    }
+  ]
+}

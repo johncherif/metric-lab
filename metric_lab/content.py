@@ -16,9 +16,25 @@ def common() -> dict:
     return json.loads((ROOT / "content" / "common.json").read_text())
 
 
+def md(text: str) -> str:
+    """Escape dollar signs. Streamlit markdown treats text between two "$" as a math formula,
+    so "$50 to $499.99" rendered garbled on the deployed app (found in deployment testing)."""
+    return text.replace("$", "\\$") if isinstance(text, str) else text
+
+
+def _escape(obj, path=()):
+    """Recursively escape every display string, except Plotly series labels (Plotly is not markdown)."""
+    if isinstance(obj, dict):
+        return {k: (v if path[-1:] == ("series",) and k == "label" else _escape(v, path + (k,)))
+                for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_escape(v, path) for v in obj]
+    return md(obj)
+
+
 @lru_cache(maxsize=None)
 def scenarios() -> list[dict]:
-    items = [json.loads(p.read_text()) for p in (ROOT / "content").glob("scenario*.json")]
+    items = [_escape(json.loads(p.read_text())) for p in (ROOT / "content").glob("scenario*.json")]
     return sorted(items, key=lambda s: s["order"])
 
 
@@ -33,7 +49,7 @@ def data(sid: str) -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def traps(sid: str) -> list[dict]:
-    return json.loads((ROOT / "data" / f"{sid}_key.json").read_text())["traps"]
+    return _escape(json.loads((ROOT / "data" / f"{sid}_key.json").read_text())["traps"])
 
 
 def chart_frame(sid: str, chart: dict, segment: str = ALL_SEGMENTS) -> pd.DataFrame:

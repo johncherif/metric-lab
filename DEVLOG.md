@@ -38,6 +38,15 @@ and which course concept (if any) the change relates to.
 | The box selection stayed on the chart after a flag was added. | Charts are re-keyed after each flag, which clears the selection. |
 | The locked rationale text box came back empty after submission. | The learner's rationale is shown as plain text beside the expert's. |
 
+## Deployment (found on Streamlit Community Cloud)
+
+| Finding | Change |
+|---|---|
+| Dollar amounts such as "$50 to $499.99" rendered as a math formula, because Streamlit markdown treats text between two "$" signs as LaTeX. Affected the products table, the Scenario 2 threshold explanation, and the Scenario 3 expert rationale. | All display text is escaped when content loads (Plotly legend labels are left raw, since Plotly is not markdown). A test now fails if an unescaped "$" reaches the interface. |
+| The hidden `.streamlit/config.toml` was not uploaded, so the app ran in the viewer's dark theme with default red buttons; the hard-coded white chart background then clashed with the dark page. | Charts no longer hard-code colors and follow the Streamlit theme in light or dark mode. Config file still recommended for the intended look. |
+| In a narrow window, Plotly chart titles were cut off and the legend overlapped the title. | Chart titles are rendered by Streamlit above each chart so they wrap; the legend sits just above the plot area. |
+| The "Analyst: look here" label was nearly invisible on the light shading. | Label drawn in a darker amber that reads in both themes. |
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which

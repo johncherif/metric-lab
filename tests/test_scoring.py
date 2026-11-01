@@ -165,3 +165,32 @@ def test_empty_selection_returns_none():
 def test_single_flag_calibration_is_not_overinterpreted():
     r = score_flags([f("rate", 5, 12, "base_changed", 70)], TRAPS)
     assert "not enough evidence" in calibration_message(calibration(r["scored"]))
+
+
+# ---------------- Dollar signs must not reach Streamlit markdown unescaped
+import re
+
+from metric_lab import content as C
+
+
+def _strings(obj, path=()):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield from _strings(v, path + (k,))
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _strings(v, path)
+    elif isinstance(obj, str):
+        yield path, obj
+
+
+def test_no_unescaped_dollar_signs_in_display_text():
+    for sc in C.scenarios():
+        for path, s in _strings(sc):
+            if path[-2:] == ("series", "label"):
+                assert "\\$" not in s          # Plotly labels stay raw
+            else:
+                assert not re.search(r"(?<!\\)\$", s), (path, s)
+    for sid in [s["id"] for s in C.scenarios()]:
+        for _, s in _strings(C.traps(sid)):
+            assert not re.search(r"(?<!\\)\$", s)
