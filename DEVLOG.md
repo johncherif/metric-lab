@@ -47,6 +47,17 @@ and which course concept (if any) the change relates to.
 | In a narrow window, Plotly chart titles were cut off and the legend overlapped the title. | Chart titles are rendered by Streamlit above each chart so they wrap; the legend sits just above the plot area. |
 | The "Analyst: look here" label was nearly invisible on the light shading. | Label drawn in a darker amber that reads in both themes. |
 
+## Live test of all three scenarios (Oct 31)
+
+| Finding | Change |
+|---|---|
+| Escaping "$" for markdown also escaped Plotly number formats ("$,.0f"), so Scenario 3's dollar axes showed raw numbers. | Machine-read keys (number formats, ids, column names) are never escaped; a test compares formats with the source files. |
+| Feedback read "This is a vanity or misleading." | Feedback uses short role nouns ("a vanity metric", "a guardrail"). |
+| The review said confidence was "well matched" while the summary showed a 40% confidence gap. With confidence limited to 50-100% and outcomes of 0 or 1, the raw gap is large even for a calibrated learner. | Summary and results show one label computed with the same thresholds as the message. |
+| The first hint pointed at an issue already found. | Hints target issues not yet found (support where it is needed). |
+| Learners had to find the next scenario in the sidebar. | "Go to Scenario N" button on the summary. |
+| A learner flagged every Scenario 2 issue, then chose "Ship" against those findings; another rated their own rationale 16/16 after a partly correct decision. | Open design items: show the learner's flags on the decision screen; compare self-ratings with auto-scored parts. |
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which

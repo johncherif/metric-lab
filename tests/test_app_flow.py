@@ -99,6 +99,13 @@ def test_full_scenario_flow(sc):
     assert {"sort_checked", "flag_added", "flags_submitted", "decision_submitted",
             "self_assessment"} <= kinds
 
+    # Next-scenario button navigates (all but the last scenario)
+    nxt = [b for b in at.button if b.key == f"{sid}_next"]
+    if nxt:
+        nxt[0].click().run()
+        assert at.sidebar.radio(key="page").value != sc["title"]
+        at.sidebar.radio(key="page").set_value(sc["title"]).run()
+
     # Restart clears the scenario
     _btn(at, f"{sid}_restart").click().run()
     assert not at.exception

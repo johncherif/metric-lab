@@ -22,10 +22,16 @@ def md(text: str) -> str:
     return text.replace("$", "\\$") if isinstance(text, str) else text
 
 
+# Machine-read values that must never be escaped: "yfmt" is a Plotly/d3 number format such as
+# "$,.0f" (escaping it broke the dollar axes in Scenario 3, found in live testing).
+_RAW_KEYS = {"yfmt", "id", "col", "num", "den", "kind", "issue", "role"}
+
+
 def _escape(obj, path=()):
     """Recursively escape every display string, except Plotly series labels (Plotly is not markdown)."""
     if isinstance(obj, dict):
-        return {k: (v if path[-1:] == ("series",) and k == "label" else _escape(v, path + (k,)))
+        return {k: (v if (path[-1:] == ("series",) and k == "label") or k in _RAW_KEYS
+                    else _escape(v, path + (k,)))
                 for k, v in obj.items()}
     if isinstance(obj, list):
         return [_escape(v, path) for v in obj]

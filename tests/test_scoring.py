@@ -187,6 +187,8 @@ def _strings(obj, path=()):
 def test_no_unescaped_dollar_signs_in_display_text():
     for sc in C.scenarios():
         for path, s in _strings(sc):
+            if path[-1:] == ("yfmt",):
+                continue                          # d3 number formats are checked below
             if path[-2:] == ("series", "label"):
                 assert "\\$" not in s          # Plotly labels stay raw
             else:
@@ -194,3 +196,20 @@ def test_no_unescaped_dollar_signs_in_display_text():
     for sid in [s["id"] for s in C.scenarios()]:
         for _, s in _strings(C.traps(sid)):
             assert not re.search(r"(?<!\\)\$", s)
+
+
+def test_chart_number_formats_are_not_escaped():
+    import json
+    for sc in C.scenarios():
+        raw = json.loads((ROOT / "content" / f"{sc['id']}.json").read_text())
+        assert [c["yfmt"] for c in sc["charts"]] == [c["yfmt"] for c in raw["charts"]]
+
+
+def test_calibration_label_agrees_with_message():
+    from metric_lab.scoring import calibration_label
+    r = score_flags([f("rate", 5, 12, "base_changed", 70), f("optout", 5, 12, "guardrail", 70),
+                     f("plans", 1, 1, "novelty", 70)], TRAPS)
+    cal = calibration(r["scored"])
+    assert calibration_label(cal) == "Well matched"
+    assert "reasonably well matched" in calibration_message(cal)
+    assert calibration_label(None) == "No flags"

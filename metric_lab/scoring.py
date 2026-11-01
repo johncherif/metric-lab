@@ -117,6 +117,22 @@ def calibration(scored: list[dict]) -> dict | None:
     return {"gap": gap, "bias": bias, "n": len(rows), "overconfident_misses": len(overconfident)}
 
 
+def calibration_label(cal: dict | None) -> str:
+    """One-word summary that always agrees with calibration_message (same thresholds).
+
+    The raw gap is not shown on its own: with confidence limited to 50-100% and outcomes of 0 or 1,
+    even a well-calibrated learner has a large gap, which contradicted the message in live testing."""
+    if cal is None:
+        return "No flags"
+    if cal["n"] < 2:
+        return "Too few flags"
+    if cal["bias"] > 0.15:
+        return "Overconfident"
+    if cal["bias"] < -0.15:
+        return "Underconfident"
+    return "Well matched"
+
+
 def calibration_message(cal: dict | None) -> str:
     if cal is None:
         return "You did not submit any flags, so there is nothing to calibrate yet."

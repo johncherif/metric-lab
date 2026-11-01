@@ -19,6 +19,7 @@ st.set_page_config(page_title="Metric Lab: BNPL Launch Review", layout="wide")
 
 COMMON = C.common()
 ROLES, ISSUES, DECISIONS = COMMON["roles"], COMMON["issue_types"], COMMON["decisions"]
+ROLE_NOUNS = COMMON["role_nouns"]   # "This is a guardrail." reads better than the full option label
 MIN_WORDS = 25
 STAGES = ["brief", "metrics", "dashboard", "decision", "summary"]
 STAGE_LABELS = ["Briefing", "Choose metrics", "Read the dashboard", "Decide and justify", "Summary"]
@@ -134,7 +135,7 @@ def stage_metrics(sc: dict) -> None:
         if checked:
             r = next(r for r in stt["sort"]["results"] if r["name"] == m["name"])
             msg = (f"Correct: {ROLES[r['correct_role']]}. " if r["correct"]
-                   else f"Not quite. This is a **{ROLES[r['correct_role']].lower()}**. ") + r["feedback"]
+                   else f"Not quite. This is a **{ROLE_NOUNS[r['correct_role']]}**. ") + r["feedback"]
             (st.success if r["correct"] else st.error)(msg)
     if not checked:
         n_missing = sum(v is None for v in answers.values())
@@ -285,7 +286,11 @@ def _hints(sc: dict, traps: list[dict]) -> None:
         return
     pool = [t["id"] for t in traps
             if t["id"] in sc["hints"] and t["id"] not in sc["support"]["walkthrough_traps"]]
-    remaining = [t for t in pool if t not in stt["hints"]]
+    # Offer hints for issues the learner has not yet flagged first (support where it is needed),
+    # instead of a fixed order that could spend a hint on an issue already found.
+    found = {s["trap_id"] for s in S.score_flags(stt["flags"], traps)["scored"]
+             if s["outcome"] == "correct"}
+    remaining = sorted((t for t in pool if t not in stt["hints"]), key=lambda t: t in found)
     for tid in stt["hints"]:
         st.info(f"Hint: {sc['hints'][tid]}")
     if remaining and st.button(f"Show a hint ({len(remaining)} left)", key=f"{sid}_hint"):
@@ -445,15 +450,17 @@ def stage_summary(sc: dict) -> None:
     b.metric("Issues found", f"{fr['detected']}/{fr['n_traps']}",
              help="Partly right flags and false alarms are listed on the dashboard review.")
     cal = fr["calibration"]
-    c.metric("Confidence gap", "n/a" if cal is None else f"{cal['gap']:.0%}",
-             help="Average distance between your confidence and your accuracy. Lower is better.")
+    c.metric("Confidence vs. accuracy", S.calibration_label(cal),
+             help=S.calibration_message(cal))
     d.metric("Decision", DECISIONS[dr["choice"]].split(":")[0],
              help=dr["decision_feedback"])
     st.write(f"Hints used: {len(stt['hints'])}. Self-assessment total: "
              f"{sum(stt['self_ratings'].values())} of 16.")
     nxt = [s for s in C.scenarios() if s["order"] == sc["order"] + 1]
     if nxt:
-        st.info(f"Next: **{nxt[0]['title']}**. Choose it in the sidebar. Support will be lighter.")
+        st.info(f"Next: **{nxt[0]['title']}**. Support will be lighter.")
+        st.button(f"Go to {nxt[0]['title']}", type="primary", key=f"{sid}_next",
+                  on_click=lambda t=nxt[0]["title"]: st.session_state.update(page=t))
     else:
         st.info("You have completed all scenarios. Download your activity log from the sidebar.")
     if st.button("Restart this scenario", key=f"{sid}_restart"):
@@ -484,9 +491,9 @@ def results_page() -> None:
             continue
         fr, cal = stt["flag_result"], stt["flag_result"]["calibration"]
         rows.append([sc["title"], "Done", f"{stt['sort']['n_correct']}/{stt['sort']['n_total']}",
-                     f"{fr['detected']}/{fr['n_traps']}", "n/a" if cal is None else f"{cal['gap']:.0%}"])
+                     f"{fr['detected']}/{fr['n_traps']}", S.calibration_label(cal)])
     st.table(pd.DataFrame(rows, columns=["Scenario", "Status", "Metrics sorted", "Issues found",
-                                         "Confidence gap"]).set_index("Scenario"))
+                                         "Confidence vs. accuracy"]).set_index("Scenario"))
     st.download_button("Download activity log (CSV)", to_csv(), "metric_lab_log.csv", "text/csv",
                        key="dl_results")
 

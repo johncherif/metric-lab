@@ -55,5 +55,10 @@
         "Decision follows from the evidence and names what would change it or what to monitor next."
       ]
     }
-  ]
+  ],
+  "role_nouns": {
+    "success": "success metric",
+    "guardrail": "guardrail",
+    "vanity": "vanity metric"
+  }
 }

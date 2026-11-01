@@ -1,0 +1,43 @@
+{
+  "traps": [
+    {
+      "id": "s2_simpson",
+      "charts": [
+        "repeat_rate"
+      ],
+      "weeks": [
+        1,
+        12
+      ],
+      "issue": "segment_reversal",
+      "title": "Repeat use is falling in every segment, even though the total is rising",
+      "explanation": "The blended repeat-plan rate rises from about 25% to about 29%, but filter by segment: existing cardholders fall from about 40% to 33%, and new-to-credit customers from about 19% to 14%. The total rises only because the mix shifted toward existing cardholders, who repeat more. Engagement is getting worse, not better."
+    },
+    {
+      "id": "s2_novelty",
+      "charts": [
+        "plans_per_user"
+      ],
+      "weeks": [
+        1,
+        4
+      ],
+      "issue": "novelty",
+      "title": "Early plans per user were a launch spike",
+      "explanation": "Plans per active user started near 2.0 in week 1 and settled at about 1.15 by week 5. The launch weeks reflect curiosity and promotion. Judge engagement on the steady-state weeks, not on a comparison with week 1."
+    },
+    {
+      "id": "s2_threshold",
+      "charts": [
+        "fee_threshold"
+      ],
+      "weeks": [
+        1,
+        12
+      ],
+      "issue": "threshold",
+      "title": "Purchases bunch just below the $500 fee threshold",
+      "explanation": "About three times as many purchases fall between $450 and $499.99 as between $500 and $549.99. Purchase sizes do not naturally drop off a cliff at $500; customers are keeping purchases under the threshold to avoid the $25 Flex 4 Plus fee. The product rule is shaping behavior, which matters for any fee or pricing decision."
+    }
+  ]
+}
