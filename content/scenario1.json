@@ -5,58 +5,165 @@
   "layer": "Adoption",
   "support": {
     "label": "Worked example",
-    "walkthrough_traps": ["s1_base"],
-    "highlight_traps": ["s1_base"],
+    "walkthrough_traps": [
+      "s1_base"
+    ],
+    "highlight_traps": [
+      "s1_base"
+    ],
     "hints": true,
-    "description": "A senior analyst walks you through the first issue. You find the second one yourself, with hints if you need them."
+    "description": "A senior analyst walks you through the first issue. You find the rest yourself, with hints if you need them. Not every chart has a problem; part of the job is knowing when not to raise an alarm."
   },
   "briefing": {
-    "from": "Dana Reyes, Director of Digital Lending, Harborline Bank",
-    "subject": "Is Flex adoption on track?",
+    "from": "Dana Reyes, Director of Digital Lending, JT Morgan",
+    "subject": "Is FlexBuy adoption on track?",
     "body": [
-      "Harborline Flex launched in the mobile app 12 weeks ago. In week 5 we expanded eligibility to a much larger group of debit and credit customers.",
+      "JT FlexBuy launched in the mobile app 12 weeks ago. In week 5 we expanded eligibility to a much larger group of debit and credit customers.",
       "The weekly report says the plan creation rate dropped from about 4.5% to under 3%, and a member of the leadership team has asked whether we should pull the feature.",
       "Before Thursday's launch review, I need your read: is adoption on track, and what should we do next?"
     ]
   },
   "metrics": [
-    {"name": "Plan creation rate among eligible customers shown the offer", "role": "success",
-     "feedback": "This is the core adoption rate: plans created divided by the eligible customers who actually saw the offer. It has a clear denominator, so it can be compared over time, as long as the population stays comparable."},
-    {"name": "New Flex users per week, by product", "role": "success",
-     "feedback": "A count, but a useful one when read by product: it shows which of the three products is driving adoption. Pair it with a rate so growth in reach is not mistaken for growth in interest."},
-    {"name": "Share of eligible customers who have used Flex at least once", "role": "success",
-     "feedback": "Penetration: a cumulative adoption measure with a clear denominator. It shows how much of the reachable market has tried the feature."},
-    {"name": "Median days from first seeing the offer to first plan", "role": "success",
-     "feedback": "Time to adopt. Shorter is better, and it is defined relative to a clear starting event, so it is comparable across cohorts."},
-    {"name": "Offer opt-out rate (customers who hide or decline the offer)", "role": "guardrail",
-     "feedback": "A guardrail: if it rises, the offer is reaching people who do not want it. Growth bought with a rising opt-out rate can damage the customer relationship."},
-    {"name": "Complaints per 1,000 plans created", "role": "guardrail",
-     "feedback": "A guardrail normalized by volume. Raw complaint counts rise with any growth; complaints per 1,000 plans tell you whether the experience is getting worse."},
-    {"name": "Plans cancelled within 14 days", "role": "guardrail",
-     "feedback": "A guardrail for regret or confusion at sign-up. A rising early-cancellation share suggests customers did not understand what they agreed to."},
-    {"name": "Offer impressions", "role": "vanity",
-     "feedback": "Impressions rise whenever the offer is shown to more people, whether or not anyone uses it. On its own it measures reach, not adoption."},
-    {"name": "Total sign-ups since launch", "role": "vanity",
-     "feedback": "A cumulative count with no denominator. It can only go up, so it cannot tell you whether adoption is improving or slowing."},
-    {"name": "Views of the Flex information page", "role": "vanity",
-     "feedback": "Page views show curiosity, not adoption. They can rise because of a marketing push without any change in plans created."},
-    {"name": "Total app sessions", "role": "vanity",
-     "feedback": "App sessions are driven by everything in the app. A change in sessions says almost nothing about Flex specifically."},
-    {"name": "Push notifications sent about Flex", "role": "vanity",
-     "feedback": "This measures the bank's own activity, not customer behavior. Sending more notifications is an input, not an outcome."}
+    {
+      "name": "Plan creation rate among eligible customers shown the offer",
+      "role": "success",
+      "feedback": "This is the core adoption rate: plans created divided by the eligible customers who actually saw the offer. It has a clear denominator, so it can be compared over time, as long as the population stays comparable."
+    },
+    {
+      "name": "New FlexBuy users per week, by product",
+      "role": "success",
+      "feedback": "A count, but a useful one when read by product: it shows which of the three products is driving adoption. Pair it with a rate so growth in reach is not mistaken for growth in interest."
+    },
+    {
+      "name": "Share of eligible customers who have used FlexBuy at least once",
+      "role": "success",
+      "feedback": "Penetration: a cumulative adoption measure with a clear denominator. It shows how much of the reachable market has tried the feature."
+    },
+    {
+      "name": "Median days from first seeing the offer to first plan",
+      "role": "success",
+      "feedback": "Time to adopt. Shorter is better, and it is defined relative to a clear starting event, so it is comparable across cohorts."
+    },
+    {
+      "name": "Offer opt-out rate (customers who hide or decline the offer)",
+      "role": "guardrail",
+      "feedback": "A guardrail: if it rises, the offer is reaching people who do not want it. Growth bought with a rising opt-out rate can damage the customer relationship."
+    },
+    {
+      "name": "Complaints per 1,000 plans created",
+      "role": "guardrail",
+      "feedback": "A guardrail normalized by volume. Raw complaint counts rise with any growth; complaints per 1,000 plans tell you whether the experience is getting worse."
+    },
+    {
+      "name": "Plans cancelled within 14 days",
+      "role": "guardrail",
+      "feedback": "A guardrail for regret or confusion at sign-up. A rising early-cancellation share suggests customers did not understand what they agreed to."
+    },
+    {
+      "name": "Offer impressions",
+      "role": "vanity",
+      "feedback": "Impressions rise whenever the offer is shown to more people, whether or not anyone uses it. On its own it measures reach, not adoption."
+    },
+    {
+      "name": "Total sign-ups since launch",
+      "role": "vanity",
+      "feedback": "A cumulative count with no denominator. It can only go up, so it cannot tell you whether adoption is improving or slowing."
+    },
+    {
+      "name": "Views of the FlexBuy information page",
+      "role": "vanity",
+      "feedback": "Page views show curiosity, not adoption. They can rise because of a marketing push without any change in plans created."
+    },
+    {
+      "name": "Total app sessions",
+      "role": "vanity",
+      "feedback": "App sessions are driven by everything in the app. A change in sessions says almost nothing about FlexBuy specifically."
+    },
+    {
+      "name": "Push notifications sent about FlexBuy",
+      "role": "vanity",
+      "feedback": "This measures the bank's own activity, not customer behavior. Sending more notifications is an input, not an outcome."
+    }
   ],
-  "segments": ["All customers", "Originally eligible", "Newly eligible"],
+  "segments": [
+    "All customers",
+    "Originally eligible",
+    "Newly eligible"
+  ],
   "segment_note": "Newly eligible customers only exist from week 5, when eligibility was expanded.",
   "charts": [
-    {"id": "impressions", "title": "Customers shown the Flex offer (weekly)", "kind": "count",
-     "series": [{"label": "Customers shown the offer", "col": "shown"}], "yfmt": ",.0f"},
-    {"id": "plans_by_product", "title": "Plans created by product (weekly)", "kind": "count",
-     "series": [{"label": "Flex 4", "col": "plans_flex4"}, {"label": "Flex 4 Plus", "col": "plans_flex4plus"},
-                {"label": "Flex Plan", "col": "plans_flexplan"}], "yfmt": ",.0f"},
-    {"id": "creation_rate", "title": "Plan creation rate (plans ÷ customers shown the offer)", "kind": "rate",
-     "series": [{"label": "Plan creation rate", "num": "plans", "den": "shown"}], "yfmt": ".1%"},
-    {"id": "optout_rate", "title": "Offer opt-out rate (opt-outs ÷ customers shown the offer)", "kind": "rate",
-     "series": [{"label": "Opt-out rate", "num": "opt_outs", "den": "shown"}], "yfmt": ".2%"}
+    {
+      "id": "impressions",
+      "title": "Customers shown the FlexBuy offer (weekly)",
+      "kind": "count",
+      "series": [
+        {
+          "label": "Customers shown the offer",
+          "col": "shown"
+        }
+      ],
+      "yfmt": ",.0f"
+    },
+    {
+      "id": "plans_by_product",
+      "title": "Plans created by product (weekly)",
+      "kind": "count",
+      "series": [
+        {
+          "label": "FlexBuy",
+          "col": "plans_flex4"
+        },
+        {
+          "label": "FlexBuy Plus",
+          "col": "plans_flex4plus"
+        },
+        {
+          "label": "FlexBuy Plan",
+          "col": "plans_flexplan"
+        }
+      ],
+      "yfmt": ",.0f"
+    },
+    {
+      "id": "creation_rate",
+      "title": "Plan creation rate (plans ÷ customers shown the offer)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Plan creation rate",
+          "num": "plans",
+          "den": "shown"
+        }
+      ],
+      "yfmt": ".1%"
+    },
+    {
+      "id": "optout_rate",
+      "title": "Offer opt-out rate (opt-outs ÷ customers shown the offer)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Opt-out rate",
+          "num": "opt_outs",
+          "den": "shown"
+        }
+      ],
+      "yfmt": ".2%"
+    },
+    {
+      "id": "complaints",
+      "title": "Complaints per 1,000 plans (weekly)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Complaints per 1,000 plans",
+          "num": "complaints",
+          "den": "plans"
+        }
+      ],
+      "scale": 1000,
+      "yfmt": ".1f"
+    }
   ],
   "walkthrough": {
     "s1_base": [
@@ -71,27 +178,121 @@
     "s1_optout": "Successful growth should not make guardrails worse. Look at the guardrail chart before and after week 5."
   },
   "decision": {
-    "question": "Based on the dashboard, what do you recommend for Flex?",
+    "question": "Based on the dashboard, what do you recommend for FlexBuy?",
     "options": {
-      "ship": {"score": 0.5,
-               "feedback": "Partly right: adoption in the original base is healthy, so there is no case for pulling the feature. But continuing as is ignores the opt-out rate, which more than doubled after the expansion."},
-      "iterate": {"score": 1.0,
-                  "feedback": "This matches the expert view. The feature is healthy in its original base; the drop in the blended rate is a denominator effect. The expansion reached customers who convert less and opt out more, so the targeting for that group should change."},
-      "rollback": {"score": 0.0,
-                   "feedback": "This is the conclusion the misleading headline invites. The original base still converts at about 4.5% and improving, so pulling the feature would discard a working product because of how the number was calculated."}
+      "ship": {
+        "score": 0.5,
+        "feedback": "Partly right: adoption in the original base is healthy, so there is no case for pulling the feature. But continuing as is ignores the opt-out rate, which more than doubled after the expansion."
+      },
+      "iterate": {
+        "score": 1.0,
+        "feedback": "This matches the expert view. The feature is healthy in its original base; the drop in the blended rate is a denominator effect. The expansion reached customers who convert less and opt out more, so the targeting for that group should change."
+      },
+      "rollback": {
+        "score": 0.0,
+        "feedback": "This is the conclusion the misleading headline invites. The original base still converts at about 4.5% and improving, so pulling the feature would discard a working product because of how the number was calculated."
+      }
     },
     "evidence": [
-      {"id": "e_orig_rate", "text": "The creation rate for originally eligible customers stayed around 4.5% and rose slightly.", "relevant": true},
-      {"id": "e_new_rate", "text": "Newly eligible customers convert at roughly a third of the original rate.", "relevant": true},
-      {"id": "e_optout", "text": "The offer opt-out rate more than doubled after week 5.", "relevant": true},
-      {"id": "e_impressions", "text": "Offer impressions more than doubled after week 5.", "relevant": false,
-       "why": "This shows the reach grew, not that customers want the feature; on its own it is a vanity signal."},
-      {"id": "e_total_plans", "text": "Total plans created per week rose after week 5.", "relevant": false,
-       "why": "True, but it is a count that grows with reach. It does not distinguish a healthier feature from a bigger audience."},
-      {"id": "e_flex4", "text": "Flex 4 is the most popular of the three products.", "relevant": false,
-       "why": "Accurate, but it does not bear on whether adoption is on track or what to do next."}
+      {
+        "id": "e_orig_rate",
+        "text": "The creation rate for originally eligible customers stayed around 4.5% and rose slightly.",
+        "relevant": true
+      },
+      {
+        "id": "e_new_rate",
+        "text": "Newly eligible customers convert at roughly a third of the original rate.",
+        "relevant": true
+      },
+      {
+        "id": "e_optout",
+        "text": "The offer opt-out rate more than doubled after week 5.",
+        "relevant": true
+      },
+      {
+        "id": "e_impressions",
+        "text": "Offer impressions more than doubled after week 5.",
+        "relevant": false,
+        "why": "This shows the reach grew, not that customers want the feature; on its own it is a vanity signal."
+      },
+      {
+        "id": "e_total_plans",
+        "text": "Total plans created per week rose after week 5.",
+        "relevant": false,
+        "why": "True, but it is a count that grows with reach. It does not distinguish a healthier feature from a bigger audience."
+      },
+      {
+        "id": "e_flex4",
+        "text": "FlexBuy is the most popular of the three products.",
+        "relevant": false,
+        "why": "Accurate, but it does not bear on whether adoption is on track or what to do next."
+      }
     ],
-    "required_evidence": ["e_orig_rate", "e_optout"],
-    "expert_rationale": "Iterate. The drop in the plan creation rate from about 4.5% to under 3% is a denominator effect, not a loss of interest: eligibility expansion in week 5 roughly doubled the customers shown the offer, and the newly eligible group converts at about 1.4%. Among originally eligible customers, the rate held near 4.5% and edged up, so the feature is working for its intended audience and should not be pulled. However, the expansion has a cost: the offer opt-out rate rose from about 0.6% to about 1.5%, driven by the new group. I recommend keeping Flex live, reporting adoption separately for each eligibility cohort going forward, and narrowing or re-targeting the offer for newly eligible customers. If the opt-out rate in the new cohort does not fall below 1% within four weeks of re-targeting, we should restrict eligibility back toward the original base."
-  }
+    "required_evidence": [
+      "e_orig_rate",
+      "e_optout"
+    ],
+    "expert_rationale": "Iterate. The drop in the plan creation rate from about 4.5% to under 3% is a denominator effect, not a loss of interest: eligibility expansion in week 5 roughly doubled the customers shown the offer, and the newly eligible group converts at about 1.4%. Among originally eligible customers, the rate held near 4.5% and edged up, so the feature is working for its intended audience and should not be pulled. However, the expansion has a cost: the offer opt-out rate rose from about 0.6% to about 1.5%, driven by the new group. I recommend keeping FlexBuy live, reporting adoption separately for each eligibility cohort going forward, and narrowing or re-targeting the offer for newly eligible customers. If the opt-out rate in the new cohort does not fall below 1% within four weeks of re-targeting, we should restrict eligibility back toward the original base."
+  },
+  "objectives": [
+    "Tell success metrics, guardrails, and vanity metrics apart for adoption (Understand).",
+    "Define an adoption rate with the right numerator and denominator (Apply).",
+    "Spot when a rate moves because its base changed, and check a guardrail (Analyze).",
+    "Recommend ship, iterate, or roll back from the evidence (Evaluate)."
+  ],
+  "why_it_matters": "Teams pull working features over a headline rate that fell only because its base changed. Catching that is one of the most valuable checks an analyst can make.",
+  "first_impression": {
+    "question": "Before you analyze anything: based on the memo alone, how is the launch going?",
+    "options": {
+      "well": "Going well",
+      "badly": "Going badly",
+      "mixed": "Mixed: some parts work, some do not",
+      "unsure": "Not sure yet"
+    }
+  },
+  "expert_short": "Mixed. Adoption is healthy in the original base; the headline drop is a denominator effect. But the opt-out guardrail worsened, so the targeting needs work.",
+  "define_it": {
+    "metric": "Plan creation rate",
+    "intent": "How likely is an eligible customer who sees the offer to open a plan?",
+    "parts": {
+      "num": {
+        "label": "Numerator: what you count",
+        "correct": "Plans created",
+        "options": {
+          "Plans created": "Right: the outcome you care about.",
+          "Offer impressions": "Impressions measure reach, not adoption; they belong in the denominator's world, not the numerator.",
+          "App sessions": "Sessions are driven by everything in the app, not by the offer."
+        }
+      },
+      "den": {
+        "label": "Denominator: who could have done it",
+        "correct": "Eligible customers shown the offer",
+        "options": {
+          "Eligible customers shown the offer": "Right: only people who saw the offer could act on it.",
+          "All app users": "This includes people who never saw the offer, so the rate falls whenever the app grows, even if the offer works.",
+          "Plans created last week": "Comparing plans to plans says nothing about how many people had the chance to adopt."
+        }
+      },
+      "win": {
+        "label": "Time window",
+        "correct": "Weekly",
+        "options": {
+          "Weekly": "Right: a weekly rate shows change over time and lines up with the dashboard.",
+          "Since launch (cumulative)": "A cumulative rate smooths away exactly the week-5 change you need to see."
+        }
+      }
+    },
+    "guardrail_prompt": "Name one guardrail you would watch alongside this rate, and say why.",
+    "model_guardrails": [
+      "Offer opt-out rate: rising opt-outs mean the offer is reaching people who do not want it.",
+      "Complaints per 1,000 plans: growth should not come with a worse experience.",
+      "Plans cancelled within 14 days: signals regret or confusion at sign-up."
+    ]
+  },
+  "exemplars": [
+    "Level 1: \"Ship it. More customers are seeing the offer and plans are up.\" (one factor, a count)",
+    "Level 2: \"Plans are up, the creation rate fell, impressions doubled, and opt-outs rose.\" (several facts, not connected to a decision)",
+    "Level 3: \"Iterate. The rate fell because eligibility expanded and the new group converts less; the original base is steady near 4.5%. Opt-outs doubled, so retarget the new group.\" (facts connected into a justified decision)",
+    "Level 4: Level 3, plus \"If new-group opt-outs stay above 1% four weeks after retargeting, narrow eligibility back to the original base, and report adoption by cohort from now on.\" (a decision rule that reaches beyond this case)"
+  ]
 }

@@ -60,5 +60,39 @@
     "success": "success metric",
     "guardrail": "guardrail",
     "vanity": "vanity metric"
-  }
+  },
+  "confidence_levels": [
+    50,
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "process_checklist": [
+    "Did the denominator change? Compare the rate with the size of its base.",
+    "Does the pattern hold in every segment? Filter before concluding.",
+    "Is this a steady state, or a launch spike? Judge on settled weeks.",
+    "Is the signal early or late? Prefer leading indicators for risk.",
+    "Did a guardrail get worse while the success metric improved?"
+  ],
+  "mindset_note": "These checks are habits that improve with practice, not a talent you either have or do not. Each miss above points to a check you can add to your routine.",
+  "glossary": {
+    "BNPL (buy now, pay later)": "A purchase split into installments, often interest-free for short plans.",
+    "Success metric": "A measure that tells you whether the feature is achieving its goal.",
+    "Guardrail metric": "A measure that must not get worse while you pursue the success metric.",
+    "Vanity metric": "A number that looks impressive but does not support a decision.",
+    "Denominator": "The base a rate is divided by: who could have done the thing you count.",
+    "Cohort": "A group defined by when they started, such as customers whose first plan was in the same week.",
+    "Segment": "A subgroup of customers, such as existing cardholders or near-prime borrowers.",
+    "Novelty effect": "A burst of activity right after launch that fades as curiosity wears off.",
+    "Threshold effect": "Behavior bunching at a rule boundary, such as purchases just under a fee cutoff.",
+    "First-payment default": "A plan whose very first installment is missed: an early warning of credit risk.",
+    "Charge-off": "A balance the bank writes off as unlikely to be repaid, usually after about 120 days past due.",
+    "Prime / near-prime": "Credit-score bands; near-prime borrowers carry more risk than prime borrowers.",
+    "Interchange": "The fee a merchant pays when a customer uses a card; a revenue source for the bank.",
+    "Cannibalization": "New volume that is really existing business moving from another product.",
+    "APR": "Annual percentage rate: the yearly cost of borrowing."
+  },
+  "rubric_note": "Levels follow the SOLO taxonomy: one factor (1), several unconnected factors (2), factors connected into a justified decision (3), and a decision rule that reaches beyond this case (4)."
 }

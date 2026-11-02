@@ -171,3 +171,70 @@ def score_decision(choice: str, evidence_ids: list[str], decision_cfg: dict) -> 
 
 def word_count(text: str) -> int:
     return len([w for w in (text or "").split() if any(ch.isalnum() for ch in w)])
+
+
+# ---------------------------------------------------------------- Construction ("Define it")
+def score_definition(choices: dict[str, str], define_cfg: dict) -> dict:
+    """Score a learner-built metric part by part (numerator, denominator, time window).
+
+    Gives practice in constructing a metric (the Apply outcome) instead of only recognizing one."""
+    parts = []
+    for key, part in define_cfg["parts"].items():
+        chosen = choices.get(key)
+        parts.append({"part": key, "label": part["label"], "chosen": chosen, "correct_option": part["correct"],
+                      "correct": chosen == part["correct"],
+                      "feedback": part["options"].get(chosen, "No option chosen.")})
+    n = sum(p["correct"] for p in parts)
+    return {"parts": parts, "n_correct": n, "n_total": len(parts), "score": n / len(parts) if parts else 0.0}
+
+
+# ---------------------------------------------------------------- Retrieval practice
+def score_retrieval(answers: list[int | None], questions: list[dict]) -> dict:
+    results = [{"q": q["q"], "chosen": a, "correct": a == q["answer"], "why": q["why"],
+                "answer_text": q["options"][q["answer"]]} for a, q in zip(answers, questions)]
+    return {"results": results, "n_correct": sum(r["correct"] for r in results), "n_total": len(results)}
+
+
+# ---------------------------------------------------------------- Guided vs independent detection
+def split_guided(flag_result: dict, guided_trap_ids: list[str], traps: list[dict]) -> dict:
+    """Separate issues found with the worked-example walkthrough from issues found independently.
+
+    Flags on walkthrough traps show that guidance works, not that the learner can detect the issue,
+    so they are reported separately and excluded from independent-detection evidence."""
+    found = {s["trap_id"] for s in flag_result["scored"] if s["outcome"] == "correct"}
+    guided = set(guided_trap_ids)
+    indep_traps = [t for t in traps if t["id"] not in guided]
+    return {"guided_found": len(found & guided), "guided_total": len(guided),
+            "independent_found": len(found - guided), "independent_total": len(indep_traps)}
+
+
+# ---------------------------------------------------------------- Coverage confidence
+def coverage_message(coverage_conf: int | None, detected: int, n_traps: int) -> str:
+    """Confidence that *all* issues were found, compared with the share actually found.
+
+    Flag-level confidence never sees issues the learner overlooked; this question does."""
+    if coverage_conf is None or not n_traps:
+        return ""
+    found_share = detected / n_traps
+    gap = coverage_conf / 100 - found_share
+    base = f"You were {coverage_conf}% sure you had found every issue; you found {detected} of {n_traps}."
+    if detected == n_traps:
+        return base + " Well judged." if coverage_conf >= 70 else base + " You found them all; trust your scan more."
+    if gap > 0.25:
+        return base + " Overlooked issues are the hardest to notice, so a quick final pass through the checklist pays off."
+    return base + " Your sense of what you might have missed was reasonable."
+
+
+# ---------------------------------------------------------------- Self-assessment calibration
+def self_assessment_check(ratings: dict[str, int], decision_score: float, evidence_score: float) -> str | None:
+    """Compare the learner's rubric self-rating with the parts the app scored automatically."""
+    if not ratings:
+        return None
+    avg = sum(ratings.values()) / len(ratings)
+    if avg >= 3.5 and (decision_score < 1 or evidence_score < 1):
+        return ("You rated your rationale at the top of the rubric, but the decision or the cited evidence did not "
+                "fully match the expert's. Look again at what the expert used that you did not.")
+    if avg <= 2 and decision_score == 1 and evidence_score == 1:
+        return ("Your decision and evidence matched the expert's, yet you rated yourself low. Your reasoning may be "
+                "stronger than you think; check the rubric levels against your own words.")
+    return "Your self-rating is consistent with the parts the app could score automatically."

@@ -37,7 +37,7 @@
       ],
       "issue": "threshold",
       "title": "Purchases bunch just below the $500 fee threshold",
-      "explanation": "About three times as many purchases fall between $450 and $499.99 as between $500 and $549.99. Purchase sizes do not naturally drop off a cliff at $500; customers are keeping purchases under the threshold to avoid the $25 Flex 4 Plus fee. The product rule is shaping behavior, which matters for any fee or pricing decision."
+      "explanation": "About three times as many purchases fall between $450 and $499.99 as between $500 and $549.99. Purchase sizes do not naturally drop off a cliff at $500; customers are keeping purchases under the threshold to avoid the 4.5% FlexBuy Plus fee. The product rule is shaping behavior, which matters for any fee or pricing decision."
     }
   ]
 }

@@ -58,6 +58,31 @@ and which course concept (if any) the change relates to.
 | Learners had to find the next scenario in the sidebar. | "Go to Scenario N" button on the summary. |
 | A learner flagged every Scenario 2 issue, then chose "Ship" against those findings; another rated their own rationale 16/16 after a partly correct decision. | Open design items: show the learner's flags on the decision screen; compare self-ratings with auto-scored parts. |
 
+## Iteration after the Milestone 1 critique (Nov 1)
+
+Aligned with the submitted proposal: the fictional bank is **JT Morgan** and the product family is **JT FlexBuy**
+(FlexBuy, FlexBuy Plus with a 4.5% fee, FlexBuy Plan with a fixed interest rate). The start page frames adoption,
+engagement, and value as a flywheel and states the growth-mindset premise of the proposal.
+
+| Critique or source | Change | Course concept |
+|---|---|---|
+| The Apply outcome was never practiced: learners only sorted ready-made metrics | "Define it" step: build a metric from numerator, denominator, and time window, with feedback on each part, and name a guardrail | Constructive alignment (Biggs) |
+| Scenario 1 walkthrough answers counted as detections | Flags on walkthrough issues are tagged "guided" and reported separately from issues found independently | Measurement validity |
+| "Something is always wrong" cue | Scenario 1 adds a clean complaints chart with nothing planted; every briefing says some charts are fine | Validity; desirable difficulty |
+| Confidence slider defaulted to 70%, and overlooked issues never counted | Confidence is an active choice for every flag (no default); a required "did you find every issue?" rating is compared with issues found | Metacognition: calibration |
+| Self-rating 16/16 after a partly correct decision went unremarked | Summary compares the rubric self-rating with the auto-scored decision and evidence | Calibration of self-assessment |
+| A learner flagged every issue, then decided against those findings | Decision screen opens with "What the dashboard showed" | Constructive alignment; Sadler |
+| Feedback was mostly task-level | Review adds a process checklist and a growth-mindset note | Hattie & Timperley (process level); attribution theory |
+| Add-these: productive failure | Each scenario opens with a committed first impression; the summary contrasts it with the expert view | Productive failure (Kapur) |
+| Add-these: help-seeking | Hints unlock after a first flag or two minutes; hint timing is logged | Help-seeking research |
+| Add-these: SOLO rubric (also Varun's peer review) | Rubric levels explained as SOLO levels; one example rationale per level for each scenario | SOLO taxonomy; Sadler (exemplars) |
+| Add-these: expectancy-value | "Why this matters" in every briefing; early success via the worked example | Expectancy-value theory |
+| Gagné's events | Learning objectives at the top of each briefing; a recall check opens Scenarios 2 and 3 (interleaving Scenario 1 and 2 content) | Gagné; testing effect; interleaving |
+| Accessibility | Text description for each chart and a "View as a table" option; glossary in the sidebar and start page | UDL; Mayer's pre-training principle |
+| Yanze's peer review: time on task | Time in every stage is logged and summarized | Controlled experiments: threats to validity |
+| Akilan's peer review: real tools | "Download this scenario's data (CSV)" for exploring in Excel, Tableau, or Power BI | Authenticity, without added cognitive load |
+| Tester feedback (two non-analyst testers): interesting but difficult | Glossary, objectives, and process checklist reduce the vocabulary barrier; testers sit outside the target audience of analysts and PMs | Rosenshine (~80% success in guided practice); audience fit |
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which

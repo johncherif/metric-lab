@@ -73,5 +73,6 @@ def chart_frame(sid: str, chart: dict, segment: str = ALL_SEGMENTS) -> pd.DataFr
         else:  # rate
             g = df.groupby("week")[[s["num"], s["den"]]].sum()
             rate = g[s["num"]] / g[s["den"]].where(g[s["den"]] > 0)   # no division by zero
+            rate = rate * chart.get("scale", 1)                       # e.g. "per 1,000 plans"
             out[s["label"]] = weeks["week"].map(rate)                 # NaN where no one was shown
     return out

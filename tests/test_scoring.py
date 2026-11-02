@@ -139,6 +139,15 @@ def test_scenario_content_is_consistent(path):
     assert set(sc["decision"]["required_evidence"]) <= ev_ids
     assert set(sc["decision"]["options"]) == set(common["decisions"])
     assert max(o["score"] for o in sc["decision"]["options"].values()) == 1.0
+    # learning-design fields added after Milestone 1 review
+    for field in ("objectives", "why_it_matters", "first_impression", "expert_short", "define_it", "exemplars"):
+        assert sc.get(field), f"{sc['id']} missing {field}"
+    for key, part in sc["define_it"]["parts"].items():
+        assert part["correct"] in part["options"], f"{sc['id']} define_it {key}: correct option missing"
+    assert len(sc["exemplars"]) == 4
+    for q in sc.get("retrieval", []):
+        assert 0 <= q["answer"] < len(q["options"])
+    assert "Harborline" not in path.read_text()
 
 
 # ---------------- Chart selection -> week range
@@ -213,3 +222,41 @@ def test_calibration_label_agrees_with_message():
     assert calibration_label(cal) == "Well matched"
     assert "reasonably well matched" in calibration_message(cal)
     assert calibration_label(None) == "No flags"
+
+
+# ---------------- New learning-design scoring
+from metric_lab.scoring import (coverage_message, score_definition, score_retrieval, self_assessment_check,
+                                split_guided)
+
+
+def test_score_definition_part_by_part():
+    cfg = {"parts": {"num": {"label": "N", "correct": "a", "options": {"a": "ok", "b": "no"}},
+                     "den": {"label": "D", "correct": "c", "options": {"c": "ok", "d": "no"}}}}
+    r = score_definition({"num": "a", "den": "d"}, cfg)
+    assert r["n_correct"] == 1 and r["parts"][1]["feedback"] == "no"
+
+
+def test_score_retrieval():
+    qs = [{"q": "x", "options": ["a", "b"], "answer": 1, "why": ""}]
+    assert score_retrieval([1], qs)["n_correct"] == 1
+    assert score_retrieval([0], qs)["results"][0]["answer_text"] == "b"
+
+
+def test_split_guided_excludes_walkthrough_traps():
+    r = score_flags([f("rate", 5, 12, "base_changed"), f("optout", 5, 12, "guardrail")], TRAPS)
+    g = split_guided(r, ["t_base"], TRAPS)
+    assert g == {"guided_found": 1, "guided_total": 1, "independent_found": 1, "independent_total": 1}
+
+
+def test_coverage_message_flags_overconfidence_about_misses():
+    assert "final pass" in coverage_message(100, 1, 3)
+    assert "Well judged" in coverage_message(90, 2, 2)
+    assert coverage_message(None, 1, 2) == ""
+
+
+def test_self_assessment_check():
+    hi = {"a": 4, "b": 4, "c": 4, "d": 4}
+    assert "top of the rubric" in self_assessment_check(hi, 0.5, 1.0)
+    assert "consistent" in self_assessment_check(hi, 1.0, 1.0)
+    lo = {"a": 1, "b": 2, "c": 2, "d": 1}
+    assert "stronger than you think" in self_assessment_check(lo, 1.0, 1.0)
