@@ -69,3 +69,10 @@ def test_scenario3_lagging_risk_and_cannibalization():
     g = data.groupby("week").sum(numeric_only=True)
     card = g.card_interest_flexplan_users / g.flexplan_customers
     assert card.loc[12] < 0.5 * card.loc[1]
+
+
+def test_scenario1_clean_chart_has_no_shift():
+    data, traps = scenario1()
+    rate = _rate(data, "complaints", "plans") * 1000
+    assert abs(rate.loc[5:12].mean() - rate.loc[1:4].mean()) < 1.0      # no planted change
+    assert all("complaints" not in t["charts"] for t in traps)

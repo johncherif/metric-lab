@@ -22,8 +22,11 @@ COMMON = C.common()
 ROLES, ISSUES, DECISIONS = COMMON["roles"], COMMON["issue_types"], COMMON["decisions"]
 ROLE_NOUNS = COMMON["role_nouns"]   # "This is a guardrail." reads better than the full option label
 CONF_LEVELS = COMMON["confidence_levels"]
-MIN_WORDS = 25
-HINT_UNLOCK_SECONDS = 120           # help-seeking: try first, then ask
+MIN_WORDS = 15                      # lowered after peer feedback that writing felt like a language test
+PRIMER = C.primer()
+PRIMER_PAGE = PRIMER["title"]
+LESSONS = {l["id"]: l for l in PRIMER["lessons"]}
+LESSON_FOR_ISSUE = {i: l["id"] for l in PRIMER["lessons"] for i in l["issue_types"]}
 STAGES = ["brief", "metrics", "dashboard", "decision", "summary"]
 STAGE_LABELS = ["Briefing", "Choose and define metrics", "Read the dashboard", "Decide and justify", "Summary"]
 
@@ -32,7 +35,7 @@ STAGE_LABELS = ["Briefing", "Choose and define metrics", "Read the dashboard", "
 def state(sid: str) -> dict:
     return st.session_state.setdefault(f"sc_{sid}", {
         "stage": "brief", "sort": None, "define": None, "flags": [], "flag_result": None, "hints": [],
-        "sel_ver": 0, "decision": None, "self_ratings": None, "next_flag_id": 0,
+        "sel_ver": 0, "decision": None, "self_rating": None, "next_flag_id": 0,
         "first_impression": None, "retrieval": None, "coverage": None,
         "stage_t0": time.time(), "times": {},
     })
@@ -76,7 +79,7 @@ def glossary_expander(where=st) -> None:
 def sidebar() -> str:
     st.sidebar.markdown("## Metric Lab")
     st.sidebar.caption("Launch review simulator. JT Morgan, JT FlexBuy, and all data are fictional.")
-    pages = ["Start here"] + [s["title"] for s in C.scenarios()] + ["My results"]
+    pages = ["Start here", PRIMER_PAGE] + [s["title"] for s in C.scenarios()] + ["My results"]
     page = st.sidebar.radio("Go to", pages, key="page")
     st.sidebar.divider()
     for s in C.scenarios():
@@ -101,6 +104,10 @@ def start_page() -> None:
              "make a recommendation, the way a real launch review works.")
     st.write("Reading data well is a skill built through practice, not a talent you either have or do not. "
              "This is a low-stakes place to practice it.")
+    st.info(f"**New to dashboards?** Start with **{PRIMER_PAGE}** in the sidebar: seven short, plain-language "
+            "lessons (about 10 minutes) on the ideas the scenarios use. If you read dashboards at work, you can "
+            "go straight to Scenario 1 and come back to a lesson whenever the review points you to one.")
+    st.button(f"Open {PRIMER_PAGE}", key="start_primer", on_click=lambda: st.session_state.update(page=PRIMER_PAGE))
     st.subheader("The three JT FlexBuy products")
     st.table(pd.DataFrame([
         ["JT FlexBuy", C.md("$50 to $499.99"), "4 monthly installments", "0% interest, no fee"],
@@ -124,12 +131,12 @@ def start_page() -> None:
     st.subheader("How each scenario works")
     st.write("1. **Choose and define metrics:** sort candidate metrics into success, guardrail, or vanity, then "
              "build one metric yourself.\n"
-             "2. **Read the dashboard:** flag anything misleading, say what kind of issue it is, and rate how "
-             "confident you are. Some charts have nothing wrong with them.\n"
+             "2. **Read the dashboard:** flag anything misleading and say what kind of issue it is. Before "
+             "submitting, say how sure you are that you found everything. Some charts have nothing wrong with them.\n"
              "3. **Decide and justify:** recommend ship, iterate, or roll back, then compare your reasoning with "
              "an expert's.")
-    st.info("Support fades as you go. Scenario 1 is a worked example, Scenario 2 offers hints after you try "
-            "first, and Scenario 3 leaves you on your own. Plan on 10 to 30 minutes per scenario.")
+    st.info("Support fades as you go. Scenario 1 is a worked example, Scenario 2 offers hints on request, and "
+            "Scenario 3 leaves you on your own. Plan on 10 to 20 minutes per scenario.")
     c1, c2 = st.columns(2)
     with c1:
         with st.expander("Issue types you can flag"):
@@ -147,6 +154,8 @@ def stage_brief(sc: dict) -> None:
         st.markdown(f"**From:** {b['from']}  \n**Subject:** {b['subject']}")
         for para in b["body"]:
             st.write(para)
+    if sc.get("plain_summary"):   # plain-language version of the memo (peer feedback: "ELI5 some sections")
+        st.info(f"**In plain words:** {sc['plain_summary']}")
     st.markdown(f"**Why this matters:** {sc['why_it_matters']}")
     st.markdown("**In this scenario you will:**")
     st.write("\n".join(f"- {o}" for o in sc["objectives"]))
@@ -202,7 +211,7 @@ def stage_metrics(sc: dict) -> None:
     st.write(f"Leadership wants to know whether **{sc['layer'].lower()}** is on track. "
              "Sort each candidate metric into the role it should play in this launch review.")
     checked = stt["sort"] is not None
-    metrics = shuffled(sc["metrics"], sid)
+    metrics = shuffled(_sort_metrics(sc), sid)
     answers = {}
     for i, m in enumerate(metrics):
         answers[m["name"]] = st.radio(
@@ -219,13 +228,19 @@ def stage_metrics(sc: dict) -> None:
             if n_missing:
                 st.warning(f"Sort all metrics before checking ({n_missing} left).")
             else:
-                stt["sort"] = S.score_sorting(answers, sc["metrics"])
+                stt["sort"] = S.score_sorting(answers, _sort_metrics(sc))
                 log(sid, "metrics", "sort_checked", score=stt["sort"]["score"], answers=answers)
                 st.rerun()
         return
     st.metric("Metrics sorted correctly", f"{stt['sort']['n_correct']} of {stt['sort']['n_total']}")
     st.caption("Your first answers are the ones recorded, so the feedback above is for learning, not for retrying.")
     _define_it(sc)
+
+
+def _sort_metrics(sc: dict) -> list[dict]:
+    """Six metrics per scenario instead of twelve (peer feedback: Scenario 1 felt long)."""
+    keep = sc.get("sort_metrics")
+    return [m for m in sc["metrics"] if m["name"] in keep] if keep else sc["metrics"]
 
 
 def _define_it(sc: dict) -> None:
@@ -276,19 +291,17 @@ def _on_chart_select(sid: str, chart_id: str, key: str) -> None:
 def _add_flag(sid: str) -> None:
     stt = state(sid)
     issue = st.session_state.get(f"{sid}_f_issue")
-    conf = st.session_state.get(f"{sid}_f_conf")
-    if not issue or conf is None:
-        st.session_state[f"{sid}_f_error"] = "Choose an issue type and your confidence before adding the flag."
+    if not issue:
+        st.session_state[f"{sid}_f_error"] = "Choose an issue type before adding the flag."
         return
     st.session_state.pop(f"{sid}_f_error", None)
     fl = S.Flag(st.session_state[f"{sid}_f_chart"], (st.session_state[f"{sid}_f_w0"], st.session_state[f"{sid}_f_w1"]),
-                issue, conf, {"id": stt["next_flag_id"]})
+                issue, None, {"id": stt["next_flag_id"]})
     stt["next_flag_id"] += 1
     stt["flags"].append(fl)
     stt["sel_ver"] += 1                      # clears the box selection on every chart
     st.session_state[f"{sid}_f_issue"] = None
-    st.session_state[f"{sid}_f_conf"] = None  # no default: confidence is an active choice for every flag
-    log(sid, "dashboard", "flag_added", chart=fl.chart, weeks=fl.weeks, issue=fl.issue, confidence=fl.confidence)
+    log(sid, "dashboard", "flag_added", chart=fl.chart, weeks=fl.weeks, issue=fl.issue)
 
 
 def _remove_flag(sid: str, flag_id: int) -> None:
@@ -381,8 +394,6 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     with c2:
         st.selectbox("What kind of issue is it?", list(ISSUES), format_func=ISSUES.get, index=None,
                      placeholder="Choose an issue type", key=f"{sid}_f_issue")
-        st.radio("How confident are you that this is a real issue?", CONF_LEVELS, index=None, horizontal=True,
-                 format_func=lambda v: f"{v}%", key=f"{sid}_f_conf")
     st.button("Add flag", on_click=_add_flag, args=(sid,), key=f"{sid}_add")
     if err := st.session_state.get(f"{sid}_f_error"):
         st.warning(err)
@@ -393,13 +404,14 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     for fl in stt["flags"]:
         a, b = st.columns([6, 1])
         a.write(f"{charts[fl.chart]['title']} · weeks {fl.weeks[0]}–{fl.weeks[1]} · "
-                f"{ISSUES[fl.issue]} · {fl.confidence}% confident")
+                f"{ISSUES[fl.issue]}")
         b.button("Remove", key=f"{sid}_rm_{fl.meta['id']}", on_click=_remove_flag, args=(sid, fl.meta["id"]))
 
 
 def _hints(sc: dict, traps: list[dict]) -> None:
-    """Hints unlock only after a first attempt or two minutes of looking (help-seeking research:
-    learners who grab every hint up front learn less), then target issues not yet found."""
+    """A "Need a hint?" button, available at any time (peer feedback on Milestone 1: do not lock help away;
+    frame the first look as productive failure instead). Hints target issues not yet found, and the time
+    and number of flags before each hint are logged, so help-seeking can still be studied."""
     sid, stt = sc["id"], state(sc["id"])
     if not sc["support"]["hints"]:
         return
@@ -412,12 +424,10 @@ def _hints(sc: dict, traps: list[dict]) -> None:
     if not remaining:
         return
     waited = time.time() - stt.get("stage_t0", time.time())
-    unlocked = bool(stt["flags"]) or waited >= HINT_UNLOCK_SECONDS
-    if not unlocked:
-        st.caption("Hints unlock after you add your first flag or spend two minutes with the dashboard. "
-                   "Try first, then ask for help where you are stuck.")
-        return
-    if st.button(f"Show a hint ({len(remaining)} left)", key=f"{sid}_hint"):
+    if not stt["hints"]:
+        st.caption("Tip: take a first look on your own before asking. Struggling a little first makes the answer "
+                   "stick better when you see it. When you are ready, a hint is one click away.")
+    if st.button(f"Need a hint? ({len(remaining)} left)", key=f"{sid}_hint"):
         stt["hints"].append(remaining[0])
         log(sid, "dashboard", "hint_used", trap=remaining[0], seconds_on_dashboard=round(waited, 1),
             flags_before_hint=len(stt["flags"]))
@@ -431,26 +441,34 @@ def _submit_flags(sc: dict, traps: list[dict]) -> None:
     if not stt["flags"]:
         confirm_empty = st.checkbox("I have reviewed the dashboard and found nothing worth flagging.",
                                     key=f"{sid}_none_ok")
-    coverage = st.radio("How confident are you that you have found every issue on this dashboard?", CONF_LEVELS,
-                        index=None, horizontal=True, format_func=lambda v: f"{v}%", key=f"{sid}_cov")
+    coverage = st.radio("One question before you submit: how sure are you that you have found every issue on this "
+                        "dashboard?", CONF_LEVELS, index=None, horizontal=True, format_func=lambda v: f"{v}%",
+                        key=f"{sid}_cov")
     if st.button("Submit my flags for review", type="primary", key=f"{sid}_submit", disabled=not confirm_empty):
         if coverage is None:
             st.warning("Rate how confident you are that you found every issue before submitting.")
             return
         res = S.score_flags(stt["flags"], traps)
-        res["calibration"] = S.calibration(res["scored"])
         res["guided"] = S.split_guided(res, sc["support"]["walkthrough_traps"], traps)
         stt["flag_result"], stt["coverage"] = res, coverage
         for s in res["scored"]:
             fl = s["flag"]
             log(sid, "dashboard", "flag_scored", chart=fl.chart, weeks=fl.weeks, issue=fl.issue,
-                confidence=fl.confidence, outcome=s["outcome"], trap=s["trap_id"],
+                outcome=s["outcome"], trap=s["trap_id"],
                 guided=s["trap_id"] in sc["support"]["walkthrough_traps"])
         log(sid, "dashboard", "flags_submitted", detected=res["detected"], partial=res["partial"],
             false_alarms=res["false_alarms"], missed=[t["id"] for t in res["missed"]],
-            calibration=res["calibration"], coverage_confidence=coverage, guided=res["guided"],
+            coverage_confidence=coverage, guided=res["guided"],
             hints_used=stt["hints"])
         st.rerun()
+
+
+def _lesson_link(issue: str, key: str) -> None:
+    """Point a missed issue at the primer lesson that teaches it (closing the gap the review revealed)."""
+    lid = LESSON_FOR_ISSUE.get(issue)
+    if lid:
+        st.button(f"Review the idea: {LESSONS[lid]['title']}", key=key,
+                  on_click=lambda: st.session_state.update(page=PRIMER_PAGE, primer_focus=lid))
 
 
 OUTCOME_TEXT = {"correct": "Correct", "partial": "Right place, different issue",
@@ -472,7 +490,7 @@ def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
     for s in res["scored"]:
         fl, out = s["flag"], s["outcome"]
         head = (f"**{OUTCOME_TEXT[out]}:** {charts[fl.chart]['title']}, weeks {fl.weeks[0]}–{fl.weeks[1]}, "
-                f"{ISSUES[fl.issue]} ({fl.confidence}% confident).")
+                f"{ISSUES[fl.issue]}.")
         if out in ("correct", "partial"):
             t = by_id[s["trap_id"]]
             extra = "" if out == "correct" else f" The issue here is: *{ISSUES[t['issue']]}*."
@@ -490,8 +508,10 @@ def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
     for t in res["missed"]:
         st.error(f"**Missed: {t['title']}** ({charts[t['charts'][0]]['title']}, weeks "
                  f"{t['weeks'][0]}–{t['weeks'][1]}). {ISSUES[t['issue']]}. {t['explanation']}")
+        _lesson_link(t["issue"], f"{sid}_lesson_{t['id']}")
     st.markdown("**Confidence check**")
-    st.write(S.calibration_message(res["calibration"]))
+    if not res["scored"]:
+        st.write("You did not submit any flags, so the review above shows every planted issue.")
     if msg := S.coverage_message(stt.get("coverage"), res["detected"], res["n_traps"]):
         st.write(msg)
     with st.container(border=True):   # process-level feedback (Hattie & Timperley)
@@ -525,15 +545,20 @@ def stage_decision(sc: dict) -> None:
     done = stt["decision"] is not None
     _findings_panel(sc)
     st.write(d["question"])
+    st.caption("In plain words: **ship** means " + COMMON["decision_plain"]["ship"] + " **Iterate** means "
+               + COMMON["decision_plain"]["iterate"] + " **Roll back** means " + COMMON["decision_plain"]["rollback"])
     choice = st.radio("Your recommendation", list(DECISIONS), format_func=DECISIONS.get, index=None,
                       key=f"{sid}_dec", disabled=done)
     st.markdown("**Which observations support your recommendation?** Select all that apply.")
     evidence = shuffled(d["evidence"], sid + "_ev")
     chosen = [e["id"] for e in evidence if st.checkbox(e["text"], key=f"{sid}_ev_{e['id']}", disabled=done)]
     if not done:
+        st.markdown("**Your rationale.** Two or three plain sentences are enough; this is about reasoning, not "
+                    "writing style.")
+        st.button("Fill in sentence starters", key=f"{sid}_starters",
+                  on_click=lambda: st.session_state.update({f"{sid}_rat": plain(C.md(COMMON["sentence_starters"]))}))
         text = st.text_area("Your rationale, as you would say it in the launch review", key=f"{sid}_rat",
-                            height=150, placeholder="State your recommendation, the evidence for it, and what you "
-                                                    "would monitor next.")
+                            height=130, placeholder=plain(C.md(COMMON["sentence_starters"])))
         n = S.word_count(text)
         st.caption(f"{n} words (at least {MIN_WORDS}). Word count updates when you click outside the box.")
         if st.button("Submit and compare with the expert", type="primary", key=f"{sid}_dec_submit"):
@@ -544,6 +569,8 @@ def stage_decision(sc: dict) -> None:
                 problems.append("select at least one supporting observation")
             if n < MIN_WORDS:
                 problems.append(f"write at least {MIN_WORDS} words")
+            elif "[" in text:
+                problems.append("replace the bracketed parts of the sentence starters with your own words")
             if problems:
                 st.warning("Before submitting, please " + ", ".join(problems) + ".")
             else:
@@ -574,24 +601,22 @@ def stage_decision(sc: dict) -> None:
         with st.container(border=True):
             st.write(d["expert_rationale"])
 
-    st.subheader("Rate your own rationale")
-    st.caption("Compare your rationale with the expert's, then choose the description that best fits yours. "
-               "The same rubric is used to score the final transfer task. " + COMMON["rubric_note"])
+    # One quick holistic rating right after the comparison (peer feedback: four criteria felt heavy).
+    st.subheader("One quick rating")
+    st.caption("Looking at your rationale next to the expert's, which level fits yours best? "
+               + COMMON["rubric_note"])
     with st.expander("See an example rationale at each level"):   # exemplars convey quality (Sadler)
         for ex in sc["exemplars"]:
             st.write(f"- {ex}")
-    ratings_done = stt["self_ratings"] is not None
-    ratings = {}
-    for i, crit in enumerate(COMMON["rubric"]):
-        ratings[crit["criterion"]] = st.radio(
-            crit["criterion"], [1, 2, 3, 4], index=None, key=f"{sid}_rub_{i}", disabled=ratings_done,
-            format_func=lambda lv, c=crit: f"{lv}. {c['levels'][lv - 1]}")
-    if not ratings_done and st.button("Save my self-assessment", type="primary", key=f"{sid}_rub_save"):
-        if any(v is None for v in ratings.values()):
-            st.warning("Rate all four criteria first.")
+    rated = stt["self_rating"] is not None
+    level = st.radio("My rationale is at level", [1, 2, 3, 4], index=None, key=f"{sid}_self", disabled=rated,
+                     format_func=lambda lv: f"{lv}. {COMMON['self_levels'][lv - 1]}")
+    if not rated and st.button("Save and see my summary", type="primary", key=f"{sid}_self_save"):
+        if level is None:
+            st.warning("Choose the level that best fits your rationale first.")
         else:
-            stt["self_ratings"] = ratings
-            log(sid, "decision", "self_assessment", **ratings)
+            stt["self_rating"] = level
+            log(sid, "decision", "self_assessment", level=level)
             go(sid, "summary")
             st.rerun()
 
@@ -611,13 +636,13 @@ def stage_summary(sc: dict) -> None:
     else:
         b.metric("Issues found", f"{fr['detected']}/{fr['n_traps']}",
                  help="Partly right flags and false alarms are listed on the dashboard review.")
-    cal = fr["calibration"]
-    c.metric("Confidence vs. accuracy", S.calibration_label(cal), help=S.calibration_message(cal))
+    c.metric("Confidence vs. results", S.coverage_label(stt["coverage"], fr["detected"], fr["n_traps"]),
+             help=S.coverage_message(stt["coverage"], fr["detected"], fr["n_traps"]) or None)
     d.metric("Decision", DECISIONS[dr["choice"]].split(":")[0], help=dr["decision_feedback"])
     minutes = sum(stt["times"].values()) / 60
     st.write(f"Hints used: {len(stt['hints'])}. Time on this scenario: about {minutes:.0f} min. "
-             f"Self-assessment total: {sum(stt['self_ratings'].values())} of 16.")
-    if msg := S.self_assessment_check(stt["self_ratings"], dr["decision_score"], dr["evidence_score"]):
+             f"Your rating of your rationale: level {stt['self_rating']} of 4.")
+    if msg := S.self_assessment_check({"overall": stt["self_rating"]}, dr["decision_score"], dr["evidence_score"]):
         st.info(msg)
 
     # Productive failure, consolidated: compare the first impression with the expert view.
@@ -665,16 +690,114 @@ def results_page() -> None:
         fr = stt["flag_result"]
         rows.append([sc["title"], "Done", f"{stt['sort']['n_correct']}/{stt['sort']['n_total']}",
                      f"{stt['define']['n_correct']}/{stt['define']['n_total']}",
-                     f"{fr['detected']}/{fr['n_traps']}", S.calibration_label(fr["calibration"])])
+                     f"{fr['detected']}/{fr['n_traps']}",
+                     f"{stt['coverage']}% sure · {S.coverage_label(stt['coverage'], fr['detected'], fr['n_traps'])}"])
     st.table(pd.DataFrame(rows, columns=["Scenario", "Status", "Metrics sorted", "Metric built", "Issues found",
-                                         "Confidence vs. accuracy"]).set_index("Scenario"))
+                                         "Sure you found everything?"]).set_index("Scenario"))
+    _confidence_pattern()
     st.download_button("Download activity log (CSV)", to_csv(), "metric_lab_log.csv", "text/csv", key="dl_results")
+
+
+def _confidence_pattern() -> None:
+    """Turn the one confidence rating per scenario into a pattern by concept, with the lesson to review."""
+    rows = []
+    for sc in C.scenarios():
+        stt = state(sc["id"])
+        if stt["stage"] != "summary":
+            continue
+        fr = stt["flag_result"]
+        by_id = {t["id"]: t for t in C.traps(sc["id"])}
+        found = {s["trap_id"] for s in fr["scored"] if s["outcome"] == "correct"}
+        rows.append({"scenario": sc["title"].split(":")[0], "coverage": stt["coverage"],
+                     "found_issues": [by_id[t]["issue"] for t in found],
+                     "missed_issues": [t["issue"] for t in fr["missed"]] +
+                                      [by_id[s["trap_id"]]["issue"] for s in fr["scored"] if s["outcome"] == "partial"]})
+    if not rows:
+        st.caption("Finish a scenario to see which ideas you have shown and which to review.")
+        return
+    pat = S.confidence_pattern(rows, LESSON_FOR_ISSUE)
+    st.subheader("Where your confidence and your results differ")
+    if pat["blind_spots"]:
+        st.write("You were at least 80% sure you had found everything, but missed these. They are the most "
+                 "useful ones to review, because confidence hides them:")
+        for i, b in enumerate(pat["blind_spots"]):
+            st.error(f"**{ISSUES[b['issue']]}** ({', '.join(b['scenarios'])})")
+            _lesson_link(b["issue"], f"res_blind_{i}")
+    if pat["missed"]:
+        st.write("Missed, and you were already unsure:")
+        for i, m in enumerate(pat["missed"]):
+            st.warning(f"**{ISSUES[m['issue']]}** ({', '.join(m['scenarios'])})")
+            _lesson_link(m["issue"], f"res_missed_{i}")
+    if not pat["blind_spots"] and not pat["missed"]:
+        st.success("No gaps between your confidence and your results so far.")
+    if pat["shown"]:
+        st.write("Ideas you have shown you can spot: " +
+                 ", ".join(f"*{ISSUES[s['issue']]}*" for s in pat["shown"]) + ".")
+
+
+# ------------------------------------------------------------------ primer
+def primer_page() -> None:
+    """Plain-language introductory lessons, for learners outside the target audience (peer feedback)."""
+    st.title(PRIMER_PAGE)
+    st.write(PRIMER["intro"])
+    with st.container(border=True):
+        st.markdown(f"**How to read the charts.** {PRIMER['how_to_read']}")
+    done = st.session_state.setdefault("primer_checks", {})
+    progress = st.empty()          # filled after the lessons, so a check answered this run is counted
+    focus = st.session_state.get("primer_focus")
+    for les in PRIMER["lessons"]:
+        with st.expander(les["title"], expanded=(les["id"] == focus)):
+            st.markdown(f"**In one sentence:** {les['one_line']}")
+            st.markdown(f"**Everyday example:** {les['analogy']}")
+            st.markdown(f"**At JT FlexBuy:** {les['bnpl']}")
+            if ch := les.get("chart"):
+                st.markdown(f"*{ch['title']}*")
+                st.plotly_chart(_primer_figure(ch), key=f"primer_chart_{les['id']}",
+                                config={"displayModeBar": False, "staticPlot": True},
+                                alt=f"{ch['title']}. {ch['caption']}")
+                st.caption(ch["caption"])
+            st.markdown(f"**What to look for:** {les['look_for']}  \n*Where you will meet it:* {les['where']}")
+            q = les["check"]
+            ans = st.radio(f"Quick check: {q['q']}", list(range(len(q["options"]))), index=None,
+                           format_func=lambda k, q=q: q["options"][k], key=f"primer_q_{les['id']}")
+            if ans is not None:
+                ok = ans == q["answer"]
+                (st.success if ok else st.error)(("Yes. " if ok else
+                                                  f"Not quite: the answer is \"{q['options'][q['answer']]}\". ") + q["why"])
+                if les["id"] not in done:
+                    done[les["id"]] = ok
+                    log("primer", "primer", "primer_check", lesson=les["id"], correct=ok)
+    progress.progress(len(done) / len(LESSONS), text=f"Quick checks answered: {len(done)} of {len(LESSONS)}")
+    first = C.scenarios()[0]["title"]
+    st.button(f"Go to {first}", type="primary", key="primer_next",
+              on_click=lambda: st.session_state.update(page=first))
+
+
+def _primer_figure(ch: dict):
+    import plotly.graph_objects as go_
+    fig = go_.Figure()
+    colors = ["#0072B2", "#E69F00", "#009E73"]   # Okabe-Ito, as in the scenario charts
+    for i, s in enumerate(ch["series"]):
+        if ch["kind"] == "bar":
+            fig.add_bar(x=[str(x) for x in ch["x_labels"]], y=s["values"], name=s["label"],
+                        marker_color=colors[i % 3])
+        else:
+            fig.add_scatter(x=ch["x_labels"], y=s["values"], name=s["label"], mode="lines+markers",
+                            line=dict(color=colors[i % 3], width=3))
+    fig.update_layout(height=260, margin=dict(l=10, r=10, t=30, b=10), showlegend=len(ch["series"]) > 1,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
+    fig.update_yaxes(tickformat=ch["yfmt"], title_text=ch["y_title"], rangemode="tozero")
+    if ch["kind"] != "bar":
+        fig.update_xaxes(title_text="Week", dtick=1)
+    return fig
 
 
 def main() -> None:
     page = sidebar()
     if page == "Start here":
         start_page()
+    elif page == PRIMER_PAGE:
+        primer_page()
     elif page == "My results":
         results_page()
     else:

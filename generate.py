@@ -37,6 +37,8 @@ def _binom(rng, n, p):
 # --------------------------------------------------------------------------
 def scenario1(seed: int = 6460):
     rng = np.random.default_rng(seed)
+    # Separate stream for the "clean" complaints chart, so adding it leaves every existing value unchanged.
+    rng_clean = np.random.default_rng(seed + 100)
     expansion_week = 5
     rows = []
     segments = {
@@ -52,7 +54,11 @@ def scenario1(seed: int = 6460):
             plans = _binom(rng, shown, r)
             opt_outs = _binom(rng, shown, optout)
             split = rng.multinomial(plans, mix) if plans else [0, 0, 0]
-            row = dict(week=int(w), segment=seg, shown=int(shown), plans=int(plans), opt_outs=int(opt_outs))
+            # Clean chart (no trap): complaints stay near 4 per 1,000 plans in both segments, so a learner
+            # who flags it learns that not every chart has a problem.
+            complaints = _binom(rng_clean, plans, 0.004)
+            row = dict(week=int(w), segment=seg, shown=int(shown), plans=int(plans), opt_outs=int(opt_outs),
+                       complaints=int(complaints))
             for p, prod in enumerate(PRODUCTS):
                 row[f"plans_{_slug(prod)}"] = int(split[p])
             rows.append(row)
@@ -86,7 +92,7 @@ def scenario2(seed: int = 6461):
     total_cohort = 9_000
     seg_cfg = {
         "Existing cardholders": dict(repeat=np.linspace(0.40, 0.33, 12), autopay=np.linspace(0.46, 0.58, 12)),
-        "New to Harborline credit": dict(repeat=np.linspace(0.19, 0.14, 12), autopay=np.linspace(0.30, 0.41, 12)),
+        "New to JT Morgan credit": dict(repeat=np.linspace(0.19, 0.14, 12), autopay=np.linspace(0.30, 0.41, 12)),
     }
     # Novelty: plans per active user starts high and settles by week 5.
     novelty = np.array([1.95, 1.62, 1.38, 1.22] + [1.15] * 8)
@@ -99,7 +105,7 @@ def scenario2(seed: int = 6461):
             plans = int(round(active * novelty[i] * rng.normal(1, 0.015)))
             autopay = _binom(rng, plans, cfg["autopay"][i])
             # Purchases just below vs just above the $500 fee threshold. Without a behavioral
-            # response these bands would be roughly equal; customers avoid the $25 fee.
+            # response these bands would be roughly equal; customers avoid the 4.5% fee.
             below = int(rng.poisson(plans * 0.090))
             above = int(rng.poisson(plans * 0.028))
             rows.append(dict(week=int(w), segment=seg, cohort_users=cohort, repeat_users=repeaters,
@@ -122,7 +128,7 @@ def scenario2(seed: int = 6461):
              title="Purchases bunch just below the $500 fee threshold",
              explanation=("About three times as many purchases fall between $450 and $499.99 as between $500 and "
                           "$549.99. Purchase sizes do not naturally drop off a cliff at $500; customers are keeping "
-                          "purchases under the threshold to avoid the $25 Flex 4 Plus fee. The product rule is "
+                          "purchases under the threshold to avoid the 4.5% FlexBuy Plus fee. The product rule is "
                           "shaping behavior, which matters for any fee or pricing decision.")),
     ]
     return data, traps
@@ -164,8 +170,8 @@ def scenario3(seed: int = 6462):
             row["plans"] = sum(row[f"plans_{_slug(p)}"] for p in PRODUCTS)
             row["due_all"] = sum(row[f"due_{_slug(p)}"] for p in PRODUCTS)
             row["chargeoffs"] = 0          # charge-off happens ~120+ days past due: impossible yet
-            # Cannibalization: Flex Plan users move card revolving balances (about 24% APR) into Flex Plan
-            # (15.99% APR). Card interest from these customers falls as Flex Plan interest rises.
+            # Cannibalization: FlexBuy Plan users move card revolving balances (about 24% APR) into FlexBuy Plan
+            # (15.99% APR). Card interest from these customers falls as FlexBuy Plan interest rises.
             cum_flexplan = sum(plans_hist[seg]["Flex Plan"])
             # Stored as totals plus a customer count, so the app shows PER-CUSTOMER rates; a raw total
             # would rise with the growing customer base and hide the shift (found while building).
@@ -176,16 +182,16 @@ def scenario3(seed: int = 6462):
     data = pd.DataFrame(rows)
     traps = [
         dict(id="s3_lagging", charts=["fpd_rate", "chargeoff_rate"], weeks=[7, 12], issue="lagging",
-             title="Early defaults are rising in near-prime Flex Plan, while charge-offs still read zero",
+             title="Early defaults are rising in near-prime FlexBuy Plan, while charge-offs still read zero",
              explanation=("Charge-offs cannot appear until about 120 days past due, so a zero charge-off rate 12 weeks "
                           "after launch says nothing about credit quality. The early-warning signal is the "
-                          "first-payment default rate: for near-prime Flex Plan customers it rose from about 1.8% to "
+                          "first-payment default rate: for near-prime FlexBuy Plan customers it rose from about 1.8% to "
                           "over 6% by week 12. Filter to 'Near-prime (below 720)' to see it clearly.")),
         dict(id="s3_cannibal", charts=["cannibalization"], weeks=[4, 12], issue="cannibalization",
-             title="Flex Plan growth is partly moved from card balances",
-             explanation=("Weekly card interest per Flex Plan customer fell from about $21 to under $10, while Flex "
+             title="FlexBuy Plan growth is partly moved from card balances",
+             explanation=("Weekly card interest per FlexBuy Plan customer fell from about $21 to under $10, while FlexBuy "
                           "Plan interest per customer held near $14. Customers are moving balances from a roughly 24% card APR to a "
-                          "15.99% Flex Plan. Part of the 'new' volume is existing borrowing at a lower rate, so net "
+                          "15.99% FlexBuy Plan. Part of the 'new' volume is existing borrowing at a lower rate, so net "
                           "value is lower than gross volume suggests.")),
     ]
     return data, traps

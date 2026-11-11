@@ -8,55 +8,141 @@
     "walkthrough_traps": [],
     "highlight_traps": [],
     "hints": true,
-    "description": "No walkthrough this time. You can ask for a hint for each issue, and hint use is recorded."
+    "description": "No walkthrough this time. Hints are available on request: take a first look on your own, then ask for a hint wherever you are stuck. Not every chart has a problem."
   },
   "briefing": {
-    "from": "Marcus Lee, Head of Digital Marketing, Harborline Bank",
-    "subject": "Engagement is growing. Can we double the Flex budget?",
+    "from": "Marcus Lee, Head of Digital Marketing, JT Morgan",
+    "subject": "Engagement is growing. Can we double the FlexBuy budget?",
     "body": [
-      "Flex has been live for 12 weeks. Our dashboard shows the repeat-plan rate climbing steadily, and plans per active user were very strong in the first weeks.",
-      "I'd like to double the Flex marketing budget next quarter to accelerate this momentum.",
+      "FlexBuy has been live for 12 weeks. Our dashboard shows the repeat-plan rate climbing steadily, and plans per active user were very strong in the first weeks.",
+      "I'd like to double the FlexBuy marketing budget next quarter to accelerate this momentum.",
       "Before I take this to the VP, can you confirm that engagement is really growing and that this is the right move?"
     ]
   },
   "metrics": [
-    {"name": "Repeat-plan rate: first-time users who open a second plan within 90 days", "role": "success",
-     "feedback": "The core engagement measure. It has a defined cohort (first-time users) and a defined window (90 days), so it can be compared across weeks and segments."},
-    {"name": "Autopay enrollment rate among new plans", "role": "success",
-     "feedback": "Autopay signals a customer intends to keep using the product, and it reduces missed payments. It is a rate with a clear denominator."},
-    {"name": "Share of Flex users with a plan in the last 30 days", "role": "success",
-     "feedback": "An activity rate: of everyone who has used Flex, how many are still using it. It separates ongoing engagement from one-time trial."},
-    {"name": "Median days between a customer's first and second plan", "role": "success",
-     "feedback": "Time to repeat. Shorter is better, and it is anchored to clear events, so it is comparable across cohorts."},
-    {"name": "Service contacts per 1,000 plans", "role": "guardrail",
-     "feedback": "A guardrail normalized by volume. Rising contacts per plan mean customers are confused or having problems as usage grows."},
-    {"name": "Customers who turn Flex off in settings, per 1,000 users", "role": "guardrail",
-     "feedback": "A guardrail for annoyance: customers actively opting out of the feature. It must not rise as engagement efforts increase."},
-    {"name": "Plans cancelled after the first installment", "role": "guardrail",
-     "feedback": "A guardrail for regret. If customers cancel once they see the first payment, the engagement is not healthy."},
-    {"name": "Total plans since launch", "role": "vanity",
-     "feedback": "A cumulative count that can only rise. It cannot show whether customers are coming back more or less often."},
-    {"name": "Average time spent on the Flex screen", "role": "vanity",
-     "feedback": "More time on a screen can mean confusion as easily as interest. It does not tell you whether customers return to use the product."},
-    {"name": "Taps on the Flex button", "role": "vanity",
-     "feedback": "Taps measure curiosity or accidental clicks, not repeat use of the product."},
-    {"name": "Total registered Flex users", "role": "vanity",
-     "feedback": "Registration is a one-time event. A large user count says nothing about whether those users are still engaged."},
-    {"name": "Open rate of Flex marketing emails", "role": "vanity",
-     "feedback": "This measures response to marketing, not engagement with the product itself."}
+    {
+      "name": "Repeat-plan rate: first-time users who open a second plan within 90 days",
+      "role": "success",
+      "feedback": "The core engagement measure. It has a defined cohort (first-time users) and a defined window (90 days), so it can be compared across weeks and segments."
+    },
+    {
+      "name": "Autopay enrollment rate among new plans",
+      "role": "success",
+      "feedback": "Autopay signals a customer intends to keep using the product, and it reduces missed payments. It is a rate with a clear denominator."
+    },
+    {
+      "name": "Share of FlexBuy users with a plan in the last 30 days",
+      "role": "success",
+      "feedback": "An activity rate: of everyone who has used FlexBuy, how many are still using it. It separates ongoing engagement from one-time trial."
+    },
+    {
+      "name": "Median days between a customer's first and second plan",
+      "role": "success",
+      "feedback": "Time to repeat. Shorter is better, and it is anchored to clear events, so it is comparable across cohorts."
+    },
+    {
+      "name": "Service contacts per 1,000 plans",
+      "role": "guardrail",
+      "feedback": "A guardrail normalized by volume. Rising contacts per plan mean customers are confused or having problems as usage grows."
+    },
+    {
+      "name": "Customers who turn FlexBuy off in settings, per 1,000 users",
+      "role": "guardrail",
+      "feedback": "A guardrail for annoyance: customers actively opting out of the feature. It must not rise as engagement efforts increase."
+    },
+    {
+      "name": "Plans cancelled after the first installment",
+      "role": "guardrail",
+      "feedback": "A guardrail for regret. If customers cancel once they see the first payment, the engagement is not healthy."
+    },
+    {
+      "name": "Total plans since launch",
+      "role": "vanity",
+      "feedback": "A cumulative count that can only rise. It cannot show whether customers are coming back more or less often."
+    },
+    {
+      "name": "Average time spent on the FlexBuy screen",
+      "role": "vanity",
+      "feedback": "More time on a screen can mean confusion as easily as interest. It does not tell you whether customers return to use the product."
+    },
+    {
+      "name": "Taps on the FlexBuy button",
+      "role": "vanity",
+      "feedback": "Taps measure curiosity or accidental clicks, not repeat use of the product."
+    },
+    {
+      "name": "Total registered FlexBuy users",
+      "role": "vanity",
+      "feedback": "Registration is a one-time event. A large user count says nothing about whether those users are still engaged."
+    },
+    {
+      "name": "Open rate of FlexBuy marketing emails",
+      "role": "vanity",
+      "feedback": "This measures response to marketing, not engagement with the product itself."
+    }
   ],
-  "segments": ["All customers", "Existing cardholders", "New to Harborline credit"],
-  "segment_note": "Existing cardholders already had a Harborline credit card before using Flex.",
+  "segments": [
+    "All customers",
+    "Existing cardholders",
+    "New to JT Morgan credit"
+  ],
+  "segment_note": "Existing cardholders already had a JT Morgan credit card before using FlexBuy.",
   "charts": [
-    {"id": "repeat_rate", "title": "Repeat-plan rate (2+ plans within 90 days of the first)", "kind": "rate",
-     "series": [{"label": "Repeat-plan rate", "num": "repeat_users", "den": "cohort_users"}], "yfmt": ".1%"},
-    {"id": "plans_per_user", "title": "Plans per active Flex user (weekly)", "kind": "rate",
-     "series": [{"label": "Plans per active user", "num": "plans", "den": "active_users"}], "yfmt": ".2f"},
-    {"id": "fee_threshold", "title": "Purchases just below and just above $500 (weekly)", "kind": "count",
-     "series": [{"label": "$450 to $499.99 (Flex 4, no fee)", "col": "band_450_499"},
-                {"label": "$500 to $549.99 (fee or interest applies)", "col": "band_500_549"}], "yfmt": ",.0f"},
-    {"id": "autopay_rate", "title": "Autopay enrollment rate (share of new plans)", "kind": "rate",
-     "series": [{"label": "Autopay enrollment", "num": "autopay_plans", "den": "plans"}], "yfmt": ".0%"}
+    {
+      "id": "repeat_rate",
+      "title": "Repeat-plan rate (2+ plans within 90 days of the first)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Repeat-plan rate",
+          "num": "repeat_users",
+          "den": "cohort_users"
+        }
+      ],
+      "yfmt": ".1%"
+    },
+    {
+      "id": "plans_per_user",
+      "title": "Plans per active FlexBuy user (weekly)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Plans per active user",
+          "num": "plans",
+          "den": "active_users"
+        }
+      ],
+      "yfmt": ".2f"
+    },
+    {
+      "id": "fee_threshold",
+      "title": "Purchases just below and just above $500 (weekly)",
+      "kind": "count",
+      "series": [
+        {
+          "label": "$450 to $499.99 (FlexBuy, no fee)",
+          "col": "band_450_499"
+        },
+        {
+          "label": "$500 to $549.99 (fee or interest applies)",
+          "col": "band_500_549"
+        }
+      ],
+      "yfmt": ",.0f"
+    },
+    {
+      "id": "autopay_rate",
+      "title": "Autopay enrollment rate (share of new plans)",
+      "kind": "rate",
+      "series": [
+        {
+          "label": "Autopay enrollment",
+          "num": "autopay_plans",
+          "den": "plans"
+        }
+      ],
+      "yfmt": ".0%"
+    }
   ],
   "walkthrough": {},
   "hints": {
@@ -65,27 +151,156 @@
     "s2_threshold": "If the $500 boundary did not matter, how many purchases would you expect just above it compared with just below it?"
   },
   "decision": {
-    "question": "Should marketing double the Flex budget next quarter?",
+    "question": "Should marketing double the FlexBuy budget next quarter?",
     "options": {
-      "ship": {"score": 0.0,
-               "feedback": "The 'growing engagement' headline is a Simpson's paradox: repeat use is falling in both segments, and the total rises only because the customer mix shifted. Doubling spend would buy more customers whose repeat use is declining."},
-      "iterate": {"score": 1.0,
-                  "feedback": "This matches the expert view. Hold the budget increase, find out why repeat use is falling within each segment, and test the fee design that customers are clearly working around."},
-      "rollback": {"score": 0.0,
-                   "feedback": "Too far. Engagement is weakening, but the feature still has steady usage and autopay enrollment is rising. Nothing here justifies pulling Flex."}
+      "ship": {
+        "score": 0.0,
+        "feedback": "The 'growing engagement' headline is a Simpson's paradox: repeat use is falling in both segments, and the total rises only because the customer mix shifted. Doubling spend would buy more customers whose repeat use is declining."
+      },
+      "iterate": {
+        "score": 1.0,
+        "feedback": "This matches the expert view. Hold the budget increase, find out why repeat use is falling within each segment, and test the fee design that customers are clearly working around."
+      },
+      "rollback": {
+        "score": 0.0,
+        "feedback": "Too far. Engagement is weakening, but the feature still has steady usage and autopay enrollment is rising. Nothing here justifies pulling FlexBuy."
+      }
     },
     "evidence": [
-      {"id": "e_seg_decline", "text": "Within both customer segments, the repeat-plan rate declined over the 12 weeks.", "relevant": true},
-      {"id": "e_mix", "text": "The customer mix shifted toward existing cardholders, who repeat more.", "relevant": true},
-      {"id": "e_threshold", "text": "About three times as many purchases fall just below $500 as just above it.", "relevant": true},
-      {"id": "e_novelty", "text": "Plans per active user in weeks 1 to 3 were a launch spike; it has been flat since week 5.", "relevant": true},
-      {"id": "e_autopay", "text": "Autopay enrollment rose from about 34% to about 53% of new plans.", "relevant": true},
-      {"id": "e_blended", "text": "The overall repeat-plan rate rose from about 25% to about 28%.", "relevant": false,
-       "why": "This is the misleading headline: it rises only because the customer mix changed, while both segments decline."},
-      {"id": "e_week1", "text": "Week 1 had the highest plans per active user of the quarter.", "relevant": false,
-       "why": "That was a launch spike. Comparing against it makes every later week look like a decline, or an early peak to recapture."}
+      {
+        "id": "e_seg_decline",
+        "text": "Within both customer segments, the repeat-plan rate declined over the 12 weeks.",
+        "relevant": true
+      },
+      {
+        "id": "e_mix",
+        "text": "The customer mix shifted toward existing cardholders, who repeat more.",
+        "relevant": true
+      },
+      {
+        "id": "e_threshold",
+        "text": "About three times as many purchases fall just below $500 as just above it.",
+        "relevant": true
+      },
+      {
+        "id": "e_novelty",
+        "text": "Plans per active user in weeks 1 to 3 were a launch spike; it has been flat since week 5.",
+        "relevant": true
+      },
+      {
+        "id": "e_autopay",
+        "text": "Autopay enrollment rose from about 34% to about 53% of new plans.",
+        "relevant": true
+      },
+      {
+        "id": "e_blended",
+        "text": "The overall repeat-plan rate rose from about 25% to about 28%.",
+        "relevant": false,
+        "why": "This is the misleading headline: it rises only because the customer mix changed, while both segments decline."
+      },
+      {
+        "id": "e_week1",
+        "text": "Week 1 had the highest plans per active user of the quarter.",
+        "relevant": false,
+        "why": "That was a launch spike. Comparing against it makes every later week look like a decline, or an early peak to recapture."
+      }
     ],
-    "required_evidence": ["e_seg_decline", "e_threshold"],
-    "expert_rationale": "Iterate, and hold the budget increase. The claim that engagement is growing is a Simpson's paradox: the blended repeat-plan rate rose from about 25% to 28% only because the customer mix shifted toward existing cardholders, who repeat more. Within both segments, repeat use fell, from about 40% to 34% for existing cardholders and from about 19% to 14% for customers new to Harborline credit. Doubling marketing would mainly add customers whose repeat use is declining. The very high plans per active user in weeks 1 to 3 was a launch spike; the steady state is about 1.15 and flat. Autopay enrollment rising from about 34% to 53% is a genuine positive. Separately, roughly three times as many purchases fall between $450 and $499.99 as between $500 and $549.99, so customers are working around the $25 Flex 4 Plus fee; I would test a lower or tiered fee before scaling. Next steps: report repeat rates by segment, investigate why repeat use is falling, and revisit the budget once the within-segment repeat rate has been stable for four consecutive weeks."
-  }
+    "required_evidence": [
+      "e_seg_decline",
+      "e_threshold"
+    ],
+    "expert_rationale": "Iterate, and hold the budget increase. The claim that engagement is growing is a Simpson's paradox: the blended repeat-plan rate rose from about 25% to 28% only because the customer mix shifted toward existing cardholders, who repeat more. Within both segments, repeat use fell, from about 40% to 34% for existing cardholders and from about 19% to 14% for customers new to JT Morgan credit. Doubling marketing would mainly add customers whose repeat use is declining. The very high plans per active user in weeks 1 to 3 was a launch spike; the steady state is about 1.15 and flat. Autopay enrollment rising from about 34% to 53% is a genuine positive. Separately, roughly three times as many purchases fall between $450 and $499.99 as between $500 and $549.99, so customers are working around the 4.5% FlexBuy Plus fee; I would test a lower or tiered fee before scaling. Next steps: report repeat rates by segment, investigate why repeat use is falling, and revisit the budget once the within-segment repeat rate has been stable for four consecutive weeks."
+  },
+  "objectives": [
+    "Classify engagement metrics by role (Understand).",
+    "Define a repeat-use rate with a proper cohort and window (Apply).",
+    "Detect segment reversals, launch spikes, and threshold effects (Analyze).",
+    "Decide whether the evidence supports more spend (Evaluate)."
+  ],
+  "why_it_matters": "Budgets are often doubled on a total that looks healthy while every customer group underneath it is declining. Segmenting before concluding protects that money.",
+  "first_impression": {
+    "question": "Before you analyze anything: based on the memo alone, how is the launch going?",
+    "options": {
+      "well": "Going well",
+      "badly": "Going badly",
+      "mixed": "Mixed: some parts work, some do not",
+      "unsure": "Not sure yet"
+    }
+  },
+  "expert_short": "Going worse than it looks. Repeat use is falling in every segment; the overall rise is a mix shift. Autopay is a genuine positive, and the fee threshold is shaping behavior.",
+  "retrieval": [
+    {
+      "q": "A rate falls in the same week the eligible population doubles. What do you check first?",
+      "options": [
+        "Whether the denominator changed",
+        "Whether customers lost interest",
+        "Whether the app had an outage"
+      ],
+      "answer": 0,
+      "why": "A change in who is counted can move a rate even when behavior is unchanged (Scenario 1)."
+    },
+    {
+      "q": "Which of these is a guardrail rather than a success metric?",
+      "options": [
+        "Offer impressions",
+        "Offer opt-out rate",
+        "Plan creation rate"
+      ],
+      "answer": 1,
+      "why": "Opt-outs must not get worse while you grow adoption. Impressions are vanity; creation rate is success."
+    }
+  ],
+  "define_it": {
+    "metric": "Repeat-plan rate",
+    "intent": "Of customers who tried FlexBuy, how many come back for another plan?",
+    "parts": {
+      "num": {
+        "label": "Numerator: what you count",
+        "correct": "Customers who opened a second plan within 90 days",
+        "options": {
+          "Customers who opened a second plan within 90 days": "Right: it counts returning customers once each.",
+          "Total plans opened": "Total plans grows with new customers too, so it cannot isolate coming back.",
+          "App logins": "Logging in is not the same as using FlexBuy again."
+        }
+      },
+      "den": {
+        "label": "Denominator: who could have done it",
+        "correct": "Customers whose first plan was at least 90 days ago",
+        "options": {
+          "Customers whose first plan was at least 90 days ago": "Right: everyone in this group has had the full 90 days to come back.",
+          "All registered FlexBuy users": "Recent customers have not had 90 days yet, so the rate would look worse during fast growth.",
+          "Total plans opened": "Plans, not customers: the units do not match the numerator."
+        }
+      },
+      "win": {
+        "label": "Time window",
+        "correct": "Within 90 days of the first plan",
+        "options": {
+          "Within 90 days of the first plan": "Right: a fixed window makes cohorts comparable.",
+          "Any time since launch": "Early customers have had longer to return, so older cohorts would always look better."
+        }
+      }
+    },
+    "guardrail_prompt": "Name one guardrail you would watch alongside repeat use, and say why.",
+    "model_guardrails": [
+      "Service contacts per 1,000 plans: more usage should not mean more confused customers.",
+      "Customers who turn FlexBuy off, per 1,000 users: a sign engagement efforts are annoying people.",
+      "Plans cancelled after the first installment: regret once the first payment arrives."
+    ]
+  },
+  "exemplars": [
+    "Level 1: \"Engagement is up, so double the budget.\" (one factor, the headline)",
+    "Level 2: \"The overall repeat rate rose, both segments fell, autopay rose, and purchases cluster under $500.\" (several facts, not connected)",
+    "Level 3: \"Iterate. The overall rise is a mix shift; repeat use fell in both segments, so more spend would buy declining engagement. Customers avoid the fee at $500, so test the fee design.\" (connected reasoning)",
+    "Level 4: Level 3, plus \"Revisit the budget once within-segment repeat rates hold steady for four weeks, and report repeat use by segment.\" (a decision rule that reaches beyond this case)"
+  ],
+  "sort_metrics": [
+    "Repeat-plan rate: first-time users who open a second plan within 90 days",
+    "Share of FlexBuy users with a plan in the last 30 days",
+    "Customers who turn FlexBuy off in settings, per 1,000 users",
+    "Total plans since launch",
+    "Taps on the FlexBuy button",
+    "Average time spent on the FlexBuy screen"
+  ],
+  "plain_summary": "The overall repeat-use number is going up, and leadership wants to spend more. Your job: check whether customers are really coming back more, or whether the total is hiding something."
 }

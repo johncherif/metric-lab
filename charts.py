@@ -27,19 +27,16 @@ def figure(frame, chart: dict, shades: list[tuple[list[int], str]] = ()) -> go.F
         color, text = SHADE[kind]
         fig.add_vrect(x0=weeks[0] - 0.5, x1=weeks[1] + 0.5, fillcolor=color, line_width=0,
                       annotation_text=text, annotation_position="top left",
-                      annotation_font_size=11, layer="below")
+                      annotation_font_size=11, annotation_font_color="#B36B00", layer="below")
     fig.update_layout(
-        title=dict(text=chart["title"], font=dict(size=14)),
-        height=300, margin=dict(l=10, r=10, t=50, b=10),
+        # Title is drawn by Streamlit above the chart so long titles wrap on narrow screens.
+        height=300, margin=dict(l=10, r=10, t=30, b=10),
         dragmode="select", hovermode="x unified",
         showlegend=len(labels) > 1,
-        legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0),
-        plot_bgcolor="white",
-    )
-    fig.update_xaxes(title_text="Week since launch", dtick=1, range=[0.5, 12.5],
-                     gridcolor="#EEEEEE", fixedrange=True)
-    fig.update_yaxes(tickformat=chart["yfmt"], rangemode="tozero", gridcolor="#EEEEEE",
-                     fixedrange=True)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+    )   # no hard-coded background: Streamlit's theme styles the chart in light and dark mode
+    fig.update_xaxes(title_text="Week since launch", dtick=1, range=[0.5, 12.5], fixedrange=True)
+    fig.update_yaxes(tickformat=chart["yfmt"], rangemode="tozero", fixedrange=True)
     if chart.get("ymax"):   # shared scale, e.g. so a 0% charge-off line sits beside default rates honestly
         fig.update_yaxes(range=[0, chart["ymax"]])
     return fig

@@ -37,12 +37,13 @@ class Flag:
     chart: str
     weeks: tuple[int, int]
     issue: str
-    confidence: int  # 50-100
+    confidence: int | None = None  # per-flag confidence was dropped after Milestone 1 peer feedback
     meta: dict = field(default_factory=dict)
 
     def normalized(self) -> "Flag":
         a, b = sorted(int(w) for w in self.weeks)
-        return Flag(self.chart, (a, b), self.issue, int(self.confidence), self.meta)
+        conf = None if self.confidence is None else int(self.confidence)
+        return Flag(self.chart, (a, b), self.issue, conf, self.meta)
 
 
 def _overlap(a: tuple[int, int], b: tuple[int, int]) -> int:
@@ -117,6 +118,22 @@ def calibration(scored: list[dict]) -> dict | None:
     return {"gap": gap, "bias": bias, "n": len(rows), "overconfident_misses": len(overconfident)}
 
 
+def calibration_label(cal: dict | None) -> str:
+    """One-word summary that always agrees with calibration_message (same thresholds).
+
+    The raw gap is not shown on its own: with confidence limited to 50-100% and outcomes of 0 or 1,
+    even a well-calibrated learner has a large gap, which contradicted the message in live testing."""
+    if cal is None:
+        return "No flags"
+    if cal["n"] < 2:
+        return "Too few flags"
+    if cal["bias"] > 0.15:
+        return "Overconfident"
+    if cal["bias"] < -0.15:
+        return "Underconfident"
+    return "Well matched"
+
+
 def calibration_message(cal: dict | None) -> str:
     if cal is None:
         return "You did not submit any flags, so there is nothing to calibrate yet."
@@ -155,3 +172,99 @@ def score_decision(choice: str, evidence_ids: list[str], decision_cfg: dict) -> 
 
 def word_count(text: str) -> int:
     return len([w for w in (text or "").split() if any(ch.isalnum() for ch in w)])
+
+
+# ---------------------------------------------------------------- Construction ("Define it")
+def score_definition(choices: dict[str, str], define_cfg: dict) -> dict:
+    """Score a learner-built metric part by part (numerator, denominator, time window).
+
+    Gives practice in constructing a metric (the Apply outcome) instead of only recognizing one."""
+    parts = []
+    for key, part in define_cfg["parts"].items():
+        chosen = choices.get(key)
+        parts.append({"part": key, "label": part["label"], "chosen": chosen, "correct_option": part["correct"],
+                      "correct": chosen == part["correct"],
+                      "feedback": part["options"].get(chosen, "No option chosen.")})
+    n = sum(p["correct"] for p in parts)
+    return {"parts": parts, "n_correct": n, "n_total": len(parts), "score": n / len(parts) if parts else 0.0}
+
+
+# ---------------------------------------------------------------- Retrieval practice
+def score_retrieval(answers: list[int | None], questions: list[dict]) -> dict:
+    results = [{"q": q["q"], "chosen": a, "correct": a == q["answer"], "why": q["why"],
+                "answer_text": q["options"][q["answer"]]} for a, q in zip(answers, questions)]
+    return {"results": results, "n_correct": sum(r["correct"] for r in results), "n_total": len(results)}
+
+
+# ---------------------------------------------------------------- Guided vs independent detection
+def split_guided(flag_result: dict, guided_trap_ids: list[str], traps: list[dict]) -> dict:
+    """Separate issues found with the worked-example walkthrough from issues found independently.
+
+    Flags on walkthrough traps show that guidance works, not that the learner can detect the issue,
+    so they are reported separately and excluded from independent-detection evidence."""
+    found = {s["trap_id"] for s in flag_result["scored"] if s["outcome"] == "correct"}
+    guided = set(guided_trap_ids)
+    indep_traps = [t for t in traps if t["id"] not in guided]
+    return {"guided_found": len(found & guided), "guided_total": len(guided),
+            "independent_found": len(found - guided), "independent_total": len(indep_traps)}
+
+
+# ---------------------------------------------------------------- Coverage confidence
+def coverage_message(coverage_conf: int | None, detected: int, n_traps: int) -> str:
+    """Confidence that *all* issues were found, compared with the share actually found.
+
+    Flag-level confidence never sees issues the learner overlooked; this question does."""
+    if coverage_conf is None or not n_traps:
+        return ""
+    found_share = detected / n_traps
+    gap = coverage_conf / 100 - found_share
+    base = f"You were {coverage_conf}% sure you had found every issue; you found {detected} of {n_traps}."
+    if detected == n_traps:
+        return base + " Well judged." if coverage_conf >= 70 else base + " You found them all; trust your scan more."
+    if gap > 0.25:
+        return base + " Overlooked issues are the hardest to notice, so a quick final pass through the checklist pays off."
+    return base + " Your sense of what you might have missed was reasonable."
+
+
+# ---------------------------------------------------------------- Self-assessment calibration
+def self_assessment_check(ratings: dict[str, int], decision_score: float, evidence_score: float) -> str | None:
+    """Compare the learner's rubric self-rating with the parts the app scored automatically."""
+    if not ratings:
+        return None
+    avg = sum(ratings.values()) / len(ratings)
+    if avg >= 3.5 and (decision_score < 1 or evidence_score < 1):
+        return ("You rated your rationale at the top of the rubric, but the decision or the cited evidence did not "
+                "fully match the expert's. Look again at what the expert used that you did not.")
+    if avg <= 2 and decision_score == 1 and evidence_score == 1:
+        return ("Your decision and evidence matched the expert's, yet you rated yourself low. Your reasoning may be "
+                "stronger than you think; check the rubric levels against your own words.")
+    return "Your self-rating is consistent with the parts the app could score automatically."
+
+
+def coverage_label(coverage_conf: int | None, detected: int, n_traps: int) -> str:
+    """One-word summary of the single confidence question, using the same thresholds as coverage_message."""
+    if coverage_conf is None or not n_traps:
+        return "Not rated"
+    if detected == n_traps:
+        return "Well judged" if coverage_conf >= 70 else "Underconfident"
+    return "Overconfident" if coverage_conf / 100 - detected / n_traps > 0.25 else "Well judged"
+
+
+# ---------------------------------------------------------------- Confidence pattern across scenarios
+def confidence_pattern(rows: list[dict], lesson_for_issue: dict[str, str]) -> dict:
+    """Turn one confidence rating per scenario into a pattern by concept (peer feedback, Milestone 1:
+    "if the learner is confident about certain concepts, identify that pattern and help close the gap").
+
+    rows: one per finished scenario: {"scenario", "coverage", "found_issues", "missed_issues"}.
+    Returns concepts missed while the learner was at least 80% sure they had found everything
+    ("blind spots"), other missed concepts, and concepts shown, each with the primer lesson to review."""
+    blind, missed, shown = {}, {}, {}
+    for r in rows:
+        sure = (r.get("coverage") or 0) >= 80
+        for issue in r["missed_issues"]:
+            (blind if sure else missed).setdefault(issue, []).append(r["scenario"])
+        for issue in r["found_issues"]:
+            shown.setdefault(issue, []).append(r["scenario"])
+    missed = {k: v for k, v in missed.items() if k not in blind}
+    as_list = lambda d: [{"issue": k, "scenarios": v, "lesson": lesson_for_issue.get(k)} for k, v in d.items()]
+    return {"blind_spots": as_list(blind), "missed": as_list(missed), "shown": as_list(shown)}

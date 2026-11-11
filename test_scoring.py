@@ -139,6 +139,19 @@ def test_scenario_content_is_consistent(path):
     assert set(sc["decision"]["required_evidence"]) <= ev_ids
     assert set(sc["decision"]["options"]) == set(common["decisions"])
     assert max(o["score"] for o in sc["decision"]["options"].values()) == 1.0
+    # learning-design fields added after Milestone 1 review
+    for field in ("objectives", "why_it_matters", "first_impression", "expert_short", "define_it", "exemplars"):
+        assert sc.get(field), f"{sc['id']} missing {field}"
+    for key, part in sc["define_it"]["parts"].items():
+        assert part["correct"] in part["options"], f"{sc['id']} define_it {key}: correct option missing"
+    assert len(sc["exemplars"]) == 4
+    for q in sc.get("retrieval", []):
+        assert 0 <= q["answer"] < len(q["options"])
+    assert "Harborline" not in path.read_text()
+    names = {m["name"] for m in sc["metrics"]}
+    assert len(sc["sort_metrics"]) == 6 and set(sc["sort_metrics"]) <= names
+    assert len({m["role"] for m in sc["metrics"] if m["name"] in sc["sort_metrics"]}) == 3   # every role present
+    assert sc.get("plain_summary")
 
 
 # ---------------- Chart selection -> week range
@@ -187,6 +200,8 @@ def _strings(obj, path=()):
 def test_no_unescaped_dollar_signs_in_display_text():
     for sc in C.scenarios():
         for path, s in _strings(sc):
+            if path[-1:] == ("yfmt",):
+                continue                          # d3 number formats are checked below
             if path[-2:] == ("series", "label"):
                 assert "\\$" not in s          # Plotly labels stay raw
             else:
@@ -194,3 +209,94 @@ def test_no_unescaped_dollar_signs_in_display_text():
     for sid in [s["id"] for s in C.scenarios()]:
         for _, s in _strings(C.traps(sid)):
             assert not re.search(r"(?<!\\)\$", s)
+
+
+def test_chart_number_formats_are_not_escaped():
+    import json
+    for sc in C.scenarios():
+        raw = json.loads((ROOT / "content" / f"{sc['id']}.json").read_text())
+        assert [c["yfmt"] for c in sc["charts"]] == [c["yfmt"] for c in raw["charts"]]
+
+
+def test_calibration_label_agrees_with_message():
+    from metric_lab.scoring import calibration_label
+    r = score_flags([f("rate", 5, 12, "base_changed", 70), f("optout", 5, 12, "guardrail", 70),
+                     f("plans", 1, 1, "novelty", 70)], TRAPS)
+    cal = calibration(r["scored"])
+    assert calibration_label(cal) == "Well matched"
+    assert "reasonably well matched" in calibration_message(cal)
+    assert calibration_label(None) == "No flags"
+
+
+# ---------------- New learning-design scoring
+from metric_lab.scoring import (coverage_message, score_definition, score_retrieval, self_assessment_check,
+                                split_guided)
+
+
+def test_score_definition_part_by_part():
+    cfg = {"parts": {"num": {"label": "N", "correct": "a", "options": {"a": "ok", "b": "no"}},
+                     "den": {"label": "D", "correct": "c", "options": {"c": "ok", "d": "no"}}}}
+    r = score_definition({"num": "a", "den": "d"}, cfg)
+    assert r["n_correct"] == 1 and r["parts"][1]["feedback"] == "no"
+
+
+def test_score_retrieval():
+    qs = [{"q": "x", "options": ["a", "b"], "answer": 1, "why": ""}]
+    assert score_retrieval([1], qs)["n_correct"] == 1
+    assert score_retrieval([0], qs)["results"][0]["answer_text"] == "b"
+
+
+def test_split_guided_excludes_walkthrough_traps():
+    r = score_flags([f("rate", 5, 12, "base_changed"), f("optout", 5, 12, "guardrail")], TRAPS)
+    g = split_guided(r, ["t_base"], TRAPS)
+    assert g == {"guided_found": 1, "guided_total": 1, "independent_found": 1, "independent_total": 1}
+
+
+def test_coverage_message_flags_overconfidence_about_misses():
+    assert "final pass" in coverage_message(100, 1, 3)
+    assert "Well judged" in coverage_message(90, 2, 2)
+    assert coverage_message(None, 1, 2) == ""
+
+
+def test_self_assessment_check():
+    hi = {"a": 4, "b": 4, "c": 4, "d": 4}
+    assert "top of the rubric" in self_assessment_check(hi, 0.5, 1.0)
+    assert "consistent" in self_assessment_check(hi, 1.0, 1.0)
+    lo = {"a": 1, "b": 2, "c": 2, "d": 1}
+    assert "stronger than you think" in self_assessment_check(lo, 1.0, 1.0)
+
+
+# ---------------- Milestone 2: one confidence question per scenario, used as a pattern by concept
+from metric_lab.scoring import confidence_pattern, coverage_label
+
+
+def test_flag_without_confidence_scores():
+    r = score_flags([Flag("rate", (5, 12), "base_changed")], TRAPS)
+    assert r["detected"] == 1
+
+
+def test_coverage_label_matches_message_thresholds():
+    assert coverage_label(90, 1, 3) == "Overconfident"
+    assert coverage_label(90, 2, 2) == "Well judged"
+    assert coverage_label(50, 2, 2) == "Underconfident"
+    assert coverage_label(None, 1, 2) == "Not rated"
+
+
+def test_confidence_pattern_separates_blind_spots():
+    rows = [{"scenario": "S1", "coverage": 90, "found_issues": ["base_changed"], "missed_issues": ["guardrail"]},
+            {"scenario": "S2", "coverage": 60, "found_issues": [], "missed_issues": ["novelty", "guardrail"]}]
+    pat = confidence_pattern(rows, {"guardrail": "roles", "novelty": "spikes"})
+    assert [b["issue"] for b in pat["blind_spots"]] == ["guardrail"]
+    assert pat["blind_spots"][0]["lesson"] == "roles"
+    assert [m["issue"] for m in pat["missed"]] == ["novelty"]          # guardrail is already a blind spot
+    assert [s["issue"] for s in pat["shown"]] == ["base_changed"]
+
+
+def test_primer_dollar_signs_escaped_but_formats_raw():
+    p = C.primer()
+    for path, s in _strings(p):
+        if path[-1:] in (("yfmt",), ("x_labels",)) or path[-2:] == ("series", "label"):
+            continue
+        assert not re.search(r"(?<!\\)\$", s), (path, s)
+    fmts = [l["chart"]["yfmt"] for l in p["lessons"] if "chart" in l]
+    assert "$,.0f" in fmts

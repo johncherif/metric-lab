@@ -83,6 +83,21 @@ engagement, and value as a flywheel and states the growth-mindset premise of the
 | Akilan's peer review: real tools | "Download this scenario's data (CSV)" for exploring in Excel, Tableau, or Power BI | Authenticity, without added cognitive load |
 | Tester feedback (two non-analyst testers): interesting but difficult | Glossary, objectives, and process checklist reduce the vocabulary barrier; testers sit outside the target audience of analysts and PMs | Rosenshine (~80% success in guided practice); audience fit |
 
+## Iteration after Milestone 1 peer feedback (Nov 10)
+
+| Feedback (source) | Change | Course concept |
+|---|---|---|
+| Confidence asked too often (John; Shivani: "keep it, but use it") | Per-flag confidence removed. One question per scenario ("how sure are you that you found every issue?"). "My results" turns those ratings into a pattern by concept: issues missed while 80% or more sure are listed as blind spots, each linked to the lesson that teaches it | Calibration and metacognitive monitoring; feedback that closes the gap (Sadler) |
+| Hard for outsiders; "ELI5 some sections" (Livia); "a curriculum that walks through the concepts" (Shivani); both testers | New "Learn the basics" primer: seven plain-language lessons, each with a one-sentence idea, an everyday analogy, the JT FlexBuy example, a small chart, and a quick check. Every issue type maps to a lesson, and missed issues link back to it | Mayer's pre-training principle; worked examples; UDL (multiple means of representation) |
+| Each briefing memo assumes analytics vocabulary | "In plain words" summary at the top of every briefing | Coherence and signaling (Mayer); UDL |
+| Scenario 1 felt long; cut the sort to about six (Xuanzhe) | Six metrics per scenario instead of twelve, all three roles represented, mixed counts per role so elimination does not give answers away | Cognitive load (extraneous load) |
+| "Need a hint?" before submitting (Xuanzhe); do not hold hints back, frame the delay as productive failure (grader) | Hint button available from the start; a short note invites a first look on your own. Time and flags before each hint are still logged | Productive failure (Kapur); help-seeking |
+| Assessment felt like a language-test writing task (Livia) | Plain-language meaning of ship, iterate, and roll back; "Fill in sentence starters" button; minimum length lowered from 25 to 15 words; bracketed starters must be replaced before submitting | Scaffolding; UDL (multiple means of expression) |
+| Keep the self-assessment but make it one quick rating after the comparison (Xuanzhe) | One holistic rating (four plain SOLO levels) right below the side-by-side comparison, replacing four criteria. The check against the auto-scored parts is unchanged | SOLO taxonomy; calibration of self-assessment |
+| Get at least one analyst or PM before the next milestone (grader) | Open: recruit analyst and PM testers for the next round | Audience fit |
+
+Found while testing this iteration: the primer's progress bar was drawn before a quick check was recorded, so it read "0 of 7" after a correct answer. It is now drawn after the lessons.
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which
@@ -91,4 +106,5 @@ engagement, and value as a flywheel and states the growth-mindset premise of the
   learners may flag. This is realistic and is scored as a false alarm, but it may need a note in the briefing if
   testers find it unfair.
 * **Progress lives in the browser tab.** Refreshing clears it; learners are told to download their log first.
+* **The single confidence rating is per scenario, not per concept.** The blind-spot pattern infers concepts from what was missed; a learner who is sure about one issue but unsure about another cannot say so.
 * **Rationales are self-assessed.** Expert scoring of rationales happens in the evaluation, not in the app.
