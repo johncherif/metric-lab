@@ -1,0 +1,174 @@
+{
+  "title": "Learn the basics",
+  "intro": "Seven short lessons in plain language, about 10 minutes in all. Each lesson gives you the idea in one sentence, an everyday example, how it shows up at JT FlexBuy, and one quick question. If you already read dashboards at work, skim the one-sentence versions and go straight to Scenario 1.",
+  "how_to_read": "Every chart in the scenarios has the same shape: weeks since launch run along the bottom (week 1 is launch week), and the measure runs up the side. A line that rises means the measure went up that week. Ask two questions of every chart: what is being counted, and out of how many?",
+  "lessons": [
+    {
+      "id": "roles",
+      "title": "1. Metrics have jobs",
+      "issue_types": ["guardrail"],
+      "one_line": "Before you read a number, decide its job: show whether the feature works (success), warn you if something is breaking (guardrail), or just look impressive (vanity).",
+      "analogy": "Think of a restaurant. Repeat diners tell you it is working (success). Food complaints must not rise while you grow (guardrail). The number of people who glanced at the menu in the window looks big but tells you almost nothing (vanity).",
+      "bnpl": "For JT FlexBuy, the share of eligible customers who open a plan is a success metric. The share who hide the offer is a guardrail. Offer impressions are a vanity metric: they rise whenever the offer is shown more, whether or not anyone uses it.",
+      "look_for": "If a success metric improves while a guardrail gets worse, the win may not be real.",
+      "where": "Every scenario, and the guardrail chart in Scenario 1.",
+      "check": {
+        "q": "Which of these is a guardrail for a new checkout feature?",
+        "options": ["Number of times the feature was shown", "Share of customers who complain after using it", "Total sign-ups since launch"],
+        "answer": 1,
+        "why": "A guardrail is something that must not get worse while the feature grows. Complaints fit; the other two are counts that only go up."
+      }
+    },
+    {
+      "id": "denominators",
+      "title": "2. A rate is a fraction: watch the bottom",
+      "issue_types": ["base_changed"],
+      "one_line": "Every rate has a top (what you count) and a bottom (who could have done it). If the bottom changes, the rate moves even when nobody's behavior changed.",
+      "analogy": "A basketball player's shooting percentage drops when the coach starts letting them take long shots. They did not get worse; they took harder shots.",
+      "bnpl": "When FlexBuy was offered to a new, less interested group of customers, the overall plan rate fell. The original customers kept using it just as much.",
+      "look_for": "When a rate suddenly jumps or drops, check whether the bottom of the fraction (customers shown, users, cohort size) jumped in the same week.",
+      "where": "Scenario 1.",
+      "chart": {
+        "title": "Plan rate: everyone shown vs. the original customers only",
+        "kind": "line", "yfmt": ".1f", "y_title": "Plan rate (%)",
+        "x_labels": [1, 2, 3, 4, 5, 6, 7, 8],
+        "series": [
+          {"label": "Everyone shown the offer", "values": [4.5, 4.5, 4.4, 4.6, 2.9, 2.8, 2.9, 2.8]},
+          {"label": "Originally eligible customers only", "values": [4.5, 4.5, 4.4, 4.6, 4.6, 4.7, 4.6, 4.7]}
+        ],
+        "caption": "In week 5 the offer went to many more customers. The overall rate fell; the original group did not change."
+      },
+      "check": {
+        "q": "A feature's usage rate fell from 10% to 6% in the same week it was shown to twice as many people. What should you check first?",
+        "options": ["Whether the original group's rate changed", "Whether to pull the feature immediately", "Whether the app had an outage"],
+        "answer": 0,
+        "why": "The bottom of the fraction doubled. Checking the original group tells you whether behavior changed or only the base did."
+      }
+    },
+    {
+      "id": "groups",
+      "title": "3. The total can disagree with every group",
+      "issue_types": ["segment_reversal"],
+      "one_line": "A total can rise while every group inside it falls, if the mix of groups shifts. This is called Simpson's paradox.",
+      "analogy": "A hospital that treats more seriously ill patients can have a lower overall survival rate than another hospital, even if it does better for every kind of patient. The overall number reflects who walks in, not how well they are treated.",
+      "bnpl": "If more FlexBuy users come from a group that always repeats more often, the overall repeat rate rises even while each group repeats less.",
+      "look_for": "Before trusting a total, split it by segment and see whether each group moves the same way.",
+      "where": "Scenario 2 (use the segment filter above the charts).",
+      "chart": {
+        "title": "Repeat rate: two groups and the total",
+        "kind": "line", "yfmt": ".0f", "y_title": "Repeat rate (%)",
+        "x_labels": [1, 2, 3, 4, 5, 6],
+        "series": [
+          {"label": "Group A (always repeats more)", "values": [60, 59, 58, 57, 56, 55]},
+          {"label": "Group B", "values": [20, 19.5, 19, 18.5, 18, 17.5]},
+          {"label": "Total", "values": [28, 31, 34, 37, 40, 43]}
+        ],
+        "caption": "Both groups fall, but the total rises, because more and more customers come from Group A."
+      },
+      "check": {
+        "q": "The overall repeat rate rose, but it fell in every customer segment. What most likely happened?",
+        "options": ["Customers like the feature more", "The mix shifted toward segments that always repeat more", "The data must be wrong"],
+        "answer": 1,
+        "why": "When every group falls but the total rises, the mix of groups changed. The data can be correct and still mislead."
+      }
+    },
+    {
+      "id": "spikes",
+      "title": "4. Launch spikes fade",
+      "issue_types": ["novelty"],
+      "one_line": "Right after a launch, people try new things out of curiosity. Judge a feature on the weeks after the excitement settles.",
+      "analogy": "A new gym is packed the first week of January. By March, you see how many people really come.",
+      "bnpl": "Plans per active user in launch week is not a fair baseline. Compare weeks after the line flattens.",
+      "look_for": "Find where the line stops changing, and compare from there.",
+      "where": "Scenario 2.",
+      "chart": {
+        "title": "Plans per active user after launch",
+        "kind": "line", "yfmt": ".2f", "y_title": "Plans per active user",
+        "x_labels": [1, 2, 3, 4, 5, 6, 7, 8],
+        "series": [{"label": "Plans per active user", "values": [1.0, 0.7, 0.52, 0.43, 0.41, 0.40, 0.41, 0.40]}],
+        "caption": "The drop from week 1 is curiosity wearing off. From week 5 on, the feature has settled."
+      },
+      "check": {
+        "q": "Usage fell 60% from launch week to week 6, then stayed flat. What is the fairest summary?",
+        "options": ["The feature is failing", "Launch-week curiosity faded; judge it on weeks 5 to 6 onward", "Usage will keep falling"],
+        "answer": 1,
+        "why": "Launch week is inflated by curiosity. Once the line is flat, you are seeing steady use."
+      }
+    },
+    {
+      "id": "boundaries",
+      "title": "5. Rules create bunching",
+      "issue_types": ["threshold"],
+      "one_line": "When a fee or rule starts at a cutoff, people change what they do to land on the cheaper side of it.",
+      "analogy": "Free shipping on orders over $50 means a lot of carts total $50.10, and very few total $49.",
+      "bnpl": "FlexBuy Plus charges a 4.5% fee from $500 up, so purchases pile up just under $500 and thin out just above it.",
+      "look_for": "Compare the counts just below and just above any cutoff. A cliff means the rule is shaping behavior.",
+      "where": "Scenario 2.",
+      "chart": {
+        "title": "Purchases by size",
+        "kind": "bar", "yfmt": ",.0f", "y_title": "Purchases",
+        "x_labels": ["$400-449", "$450-499", "$500-549", "$550-599"],
+        "series": [{"label": "Purchases", "values": [900, 1600, 400, 700]}],
+        "caption": "The pile-up at $450 to $499 and the dip at $500 to $549 come from the fee starting at $500."
+      },
+      "check": {
+        "q": "A fee starts at $500. Purchases of $450 to $499 are four times as common as $500 to $549. What does that suggest?",
+        "options": ["Customers prefer smaller items", "Customers are keeping purchases under the fee", "Nothing; it is random"],
+        "answer": 1,
+        "why": "Without a cutoff you would expect similar counts on either side. The cliff at $500 shows the fee is changing behavior."
+      }
+    },
+    {
+      "id": "early_warning",
+      "title": "6. Late results need early warnings",
+      "issue_types": ["lagging"],
+      "one_line": "Some bad outcomes, like loans written off as unpaid, show up months later. Watch the earliest sign instead of waiting for the final result.",
+      "analogy": "A check-engine light comes on long before the car breaks down. 'The car still runs' is not a reason to ignore it.",
+      "bnpl": "A loan is usually written off (a charge-off) about four months after payments stop. A 12-week-old product shows zero charge-offs no matter what. A rising share of customers missing their first payment is the early warning.",
+      "look_for": "Ask of every good-looking number: could it possibly have changed yet?",
+      "where": "Scenario 3.",
+      "chart": {
+        "title": "Missed first payments vs. charge-offs",
+        "kind": "line", "yfmt": ".1f", "y_title": "Share of plans (%)",
+        "x_labels": [5, 6, 7, 8, 9, 10, 11, 12],
+        "series": [
+          {"label": "Missed first payment", "values": [2.0, 2.3, 2.8, 3.4, 4.0, 4.6, 5.2, 5.7]},
+          {"label": "Charged off", "values": [0, 0, 0, 0, 0, 0, 0, 0]}
+        ],
+        "caption": "Charge-offs are zero only because it is too early. Missed first payments are climbing."
+      },
+      "check": {
+        "q": "A new lending product is 10 weeks old with zero write-offs. What is the best reading?",
+        "options": ["It is safe to expand", "It is too early for write-offs; check early signs like missed first payments", "Write-offs will stay at zero"],
+        "answer": 1,
+        "why": "Write-offs take months to appear. An early signal tells you where they are heading."
+      }
+    },
+    {
+      "id": "cannibalization",
+      "title": "7. New growth can be old business moving",
+      "issue_types": ["cannibalization"],
+      "one_line": "A new product can look successful because customers moved over from something you already sold, not because they are new business.",
+      "analogy": "A coffee shop's new cold brew sells well, but iced coffee sales dropped by the same amount. The shop did not really grow.",
+      "bnpl": "If interest from FlexBuy Plan rises while credit card interest from the same customers falls, the bank may be swapping one source of revenue for a cheaper one.",
+      "look_for": "Look at what the same customers did before, in your other products.",
+      "where": "Scenario 3.",
+      "chart": {
+        "title": "Interest per FlexBuy Plan customer, by product",
+        "kind": "line", "yfmt": "$,.0f", "y_title": "Interest per customer",
+        "x_labels": [1, 2, 3, 4, 5, 6],
+        "series": [
+          {"label": "Credit card interest", "values": [40, 36, 31, 27, 23, 19]},
+          {"label": "FlexBuy Plan interest", "values": [5, 9, 13, 17, 21, 24]}
+        ],
+        "caption": "FlexBuy Plan interest rises, but card interest from the same customers falls faster."
+      },
+      "check": {
+        "q": "A new savings account gained $10M in deposits, and the bank's older savings account lost $9M. How much new money came in?",
+        "options": ["$10M", "About $1M", "$19M"],
+        "answer": 1,
+        "why": "Most of the new balances moved from the old account. Net new money is the difference."
+      }
+    }
+  ]
+}

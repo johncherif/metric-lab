@@ -94,5 +94,17 @@
     "Cannibalization": "New volume that is really existing business moving from another product.",
     "APR": "Annual percentage rate: the yearly cost of borrowing."
   },
-  "rubric_note": "Levels follow the SOLO taxonomy: one factor (1), several unconnected factors (2), factors connected into a justified decision (3), and a decision rule that reaches beyond this case (4)."
+  "rubric_note": "Levels follow the SOLO taxonomy: one factor (1), several unconnected factors (2), factors connected into a justified decision (3), and a decision rule that reaches beyond this case (4).",
+  "self_levels": [
+    "I gave one reason (for example, only the headline number).",
+    "I gave several reasons, but did not connect them to my decision.",
+    "My reasons are tied to the evidence and lead to my decision.",
+    "Like level 3, and I said what would change my mind or what to watch next."
+  ],
+  "sentence_starters": "I recommend [ship / iterate / roll back] because [what the data shows]. The key evidence is [one or two observations]. Next, I would watch [a metric] to confirm.",
+  "decision_plain": {
+    "ship": "keep going as planned.",
+    "iterate": "keep it, but fix one specific thing.",
+    "rollback": "pause or remove it."
+  }
 }

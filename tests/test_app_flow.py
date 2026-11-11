@@ -23,12 +23,11 @@ def _key(sid):
     return json.loads((ROOT / "data" / f"{sid}_key.json").read_text())["traps"]
 
 
-def _add_flag(at, sid, chart, weeks, issue, conf):
+def _add_flag(at, sid, chart, weeks, issue):
     at.selectbox(key=f"{sid}_f_chart").set_value(chart)
     at.selectbox(key=f"{sid}_f_w0").set_value(weeks[0])
     at.selectbox(key=f"{sid}_f_w1").set_value(weeks[1])
     at.selectbox(key=f"{sid}_f_issue").set_value(issue)
-    at.radio(key=f"{sid}_f_conf").set_value(conf)
     at.run()
     _btn(at, f"{sid}_add").click().run()
     assert not at.exception
@@ -41,8 +40,9 @@ def test_full_scenario_flow(sc):
     assert not at.exception
     at.sidebar.radio(key="page").set_value(sc["title"]).run()
 
-    # Briefing: objectives shown; first impression required; recall check required where present
+    # Briefing: objectives and plain-language summary shown; first impression required; recall check
     assert any("In this scenario you will" in m.value for m in at.markdown)
+    assert any("In plain words" in i.value for i in at.info)
     _btn(at, f"{sid}_go_metrics").click().run()
     assert any("first impression" in w.value for w in at.warning)
     at.radio(key=f"{sid}_fi").set_value("mixed").run()
@@ -57,14 +57,15 @@ def test_full_scenario_flow(sc):
     _btn(at, f"{sid}_go_metrics").click().run()
     assert not at.exception
 
-    # Stage 1a: sort every metric correctly
+    # Stage 1a: sort the six metrics correctly
     roles = {m["name"]: m["role"] for m in sc["metrics"]}
-    for r in at.radio:
-        if r.key and r.key.startswith(f"{sid}_m_"):
-            r.set_value(roles[r.label])
+    sort_radios = [r for r in at.radio if r.key and r.key.startswith(f"{sid}_m_")]
+    assert len(sort_radios) == 6
+    for r in sort_radios:
+        r.set_value(roles[r.label])
     at.run()
     _btn(at, f"{sid}_check").click().run()
-    assert any("12 of 12" in m.value for m in at.metric)
+    assert any("6 of 6" in m.value for m in at.metric)
 
     # Stage 1b: Define it (one deliberate mistake on the denominator)
     d = sc["define_it"]
@@ -81,24 +82,26 @@ def test_full_scenario_flow(sc):
     _btn(at, f"{sid}_go_dash").click().run()
     assert not at.exception
 
-    # Stage 2: confidence has no default; flags; coverage required
+    # Stage 2: no per-flag confidence; issue type required; one coverage question before submit
     traps = _key(sid)
-    at.selectbox(key=f"{sid}_f_issue").set_value(traps[0]["issue"]).run()
+    assert not any(r.key == f"{sid}_f_conf" for r in at.radio)
     _btn(at, f"{sid}_add").click().run()
-    assert any("confidence" in w.value for w in at.warning)
+    assert any("issue type" in w.value for w in at.warning)
 
-    for t in traps:
-        _add_flag(at, sid, t["charts"][0], tuple(t["weeks"]), t["issue"], 90)
-    clear = next((c["id"], (w, w)) for c in sc["charts"] for w in range(1, 13)
-                 if not any(c["id"] in t["charts"] and t["weeks"][0] <= w <= t["weeks"][1] for t in traps))
-    _add_flag(at, sid, clear[0], clear[1], "novelty", 90)
-    t0 = traps[0]
-    _add_flag(at, sid, t0["charts"][-1], tuple(t0["weeks"]), t0["issue"], 60)
-    assert at.radio(key=f"{sid}_f_conf").value is None          # reset after each flag
-
-    if sc["support"]["hints"] and _has_btn(at, f"{sid}_hint"):  # unlocked after the first flag
+    if sc["support"]["hints"]:                                  # available before any attempt
+        assert any("first look" in c.value for c in at.caption)
         _btn(at, f"{sid}_hint").click().run()
         assert any(i.value.startswith("Hint:") for i in at.info)
+    else:
+        assert not _has_btn(at, f"{sid}_hint")
+
+    for t in traps:
+        _add_flag(at, sid, t["charts"][0], tuple(t["weeks"]), t["issue"])
+    clear = next((c["id"], (w, w)) for c in sc["charts"] for w in range(1, 13)
+                 if not any(c["id"] in t["charts"] and t["weeks"][0] <= w <= t["weeks"][1] for t in traps))
+    _add_flag(at, sid, clear[0], clear[1], "novelty")
+    t0 = traps[0]
+    _add_flag(at, sid, t0["charts"][-1], tuple(t0["weeks"]), t0["issue"])
 
     _btn(at, f"{sid}_submit").click().run()
     assert any("found every issue" in w.value for w in at.warning)
@@ -122,16 +125,20 @@ def test_full_scenario_flow(sc):
     at.radio(key=f"{sid}_dec").set_value(best)
     for eid in sc["decision"]["required_evidence"]:
         at.checkbox(key=f"{sid}_ev_{eid}").check()
-    at.text_area(key=f"{sid}_rat").input(" ".join(["word"] * 30))
+    _btn(at, f"{sid}_starters").click().run()                  # starters fill the box but must be edited
+    assert "[" in at.text_area(key=f"{sid}_rat").value
+    _btn(at, f"{sid}_dec_submit").click().run()
+    assert any("bracketed" in w.value for w in at.warning)
+    at.text_area(key=f"{sid}_rat").input(" ".join(["word"] * 20))
     at.run()
     _btn(at, f"{sid}_dec_submit").click().run()
     assert not at.exception
     assert any("expert" in s.value.lower() for s in at.success)
     assert any("SOLO" in c.value for c in at.caption)
-    for i in range(4):
-        at.radio(key=f"{sid}_rub_{i}").set_value(4)
-    at.run()
-    _btn(at, f"{sid}_rub_save").click().run()
+    _btn(at, f"{sid}_self_save").click().run()
+    assert any("Choose the level" in w.value for w in at.warning)
+    at.radio(key=f"{sid}_self").set_value(4).run()
+    _btn(at, f"{sid}_self_save").click().run()
     assert not at.exception
     assert any(m.label == "Decision" for m in at.metric)
     assert any("Before and after" in m.value for m in at.markdown)
@@ -170,15 +177,27 @@ def test_submit_with_no_flags_requires_confirmation():
     assert any("did not submit any flags" in m.value for m in at.markdown)
 
 
-def test_hints_locked_before_first_attempt():
-    sc = SCENARIOS[1]
-    sid = sc["id"]
+def test_primer_lessons_and_checks():
     at = AppTest.from_file(APP, default_timeout=30).run()
-    at.sidebar.radio(key="page").set_value(sc["title"]).run()
-    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
-    at.run()
-    assert not _has_btn(at, f"{sid}_hint")
-    assert any("Hints unlock" in c.value for c in at.caption)
+    _btn(at, "start_primer").click().run()
+    assert at.sidebar.radio(key="page").value == "Learn the basics"
+    primer = json.loads((ROOT / "content" / "primer.json").read_text())
+    assert len(at.expander) >= len(primer["lessons"])
+    les = primer["lessons"][1]
+    at.radio(key=f"primer_q_{les['id']}").set_value(les["check"]["answer"]).run()
+    assert any(s.value.startswith("Yes.") for s in at.success)
+    assert at.session_state["primer_checks"] == {les["id"]: True}
+    _btn(at, "primer_next").click().run()
+    assert at.sidebar.radio(key="page").value == SCENARIOS[0]["title"]
+
+
+def test_every_issue_type_has_a_lesson():
+    primer = json.loads((ROOT / "content" / "primer.json").read_text())
+    common = json.loads((ROOT / "content" / "common.json").read_text())
+    covered = {i for l in primer["lessons"] for i in l["issue_types"]}
+    assert set(common["issue_types"]) <= covered
+    for l in primer["lessons"]:
+        assert 0 <= l["check"]["answer"] < len(l["check"]["options"])
 
 
 def test_start_page_uses_proposal_branding():

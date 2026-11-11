@@ -148,6 +148,10 @@ def test_scenario_content_is_consistent(path):
     for q in sc.get("retrieval", []):
         assert 0 <= q["answer"] < len(q["options"])
     assert "Harborline" not in path.read_text()
+    names = {m["name"] for m in sc["metrics"]}
+    assert len(sc["sort_metrics"]) == 6 and set(sc["sort_metrics"]) <= names
+    assert len({m["role"] for m in sc["metrics"] if m["name"] in sc["sort_metrics"]}) == 3   # every role present
+    assert sc.get("plain_summary")
 
 
 # ---------------- Chart selection -> week range
@@ -260,3 +264,39 @@ def test_self_assessment_check():
     assert "consistent" in self_assessment_check(hi, 1.0, 1.0)
     lo = {"a": 1, "b": 2, "c": 2, "d": 1}
     assert "stronger than you think" in self_assessment_check(lo, 1.0, 1.0)
+
+
+# ---------------- Milestone 2: one confidence question per scenario, used as a pattern by concept
+from metric_lab.scoring import confidence_pattern, coverage_label
+
+
+def test_flag_without_confidence_scores():
+    r = score_flags([Flag("rate", (5, 12), "base_changed")], TRAPS)
+    assert r["detected"] == 1
+
+
+def test_coverage_label_matches_message_thresholds():
+    assert coverage_label(90, 1, 3) == "Overconfident"
+    assert coverage_label(90, 2, 2) == "Well judged"
+    assert coverage_label(50, 2, 2) == "Underconfident"
+    assert coverage_label(None, 1, 2) == "Not rated"
+
+
+def test_confidence_pattern_separates_blind_spots():
+    rows = [{"scenario": "S1", "coverage": 90, "found_issues": ["base_changed"], "missed_issues": ["guardrail"]},
+            {"scenario": "S2", "coverage": 60, "found_issues": [], "missed_issues": ["novelty", "guardrail"]}]
+    pat = confidence_pattern(rows, {"guardrail": "roles", "novelty": "spikes"})
+    assert [b["issue"] for b in pat["blind_spots"]] == ["guardrail"]
+    assert pat["blind_spots"][0]["lesson"] == "roles"
+    assert [m["issue"] for m in pat["missed"]] == ["novelty"]          # guardrail is already a blind spot
+    assert [s["issue"] for s in pat["shown"]] == ["base_changed"]
+
+
+def test_primer_dollar_signs_escaped_but_formats_raw():
+    p = C.primer()
+    for path, s in _strings(p):
+        if path[-1:] in (("yfmt",), ("x_labels",)) or path[-2:] == ("series", "label"):
+            continue
+        assert not re.search(r"(?<!\\)\$", s), (path, s)
+    fmts = [l["chart"]["yfmt"] for l in p["lessons"] if "chart" in l]
+    assert "$,.0f" in fmts

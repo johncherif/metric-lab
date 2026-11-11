@@ -24,7 +24,7 @@ def md(text: str) -> str:
 
 # Machine-read values that must never be escaped: "yfmt" is a Plotly/d3 number format such as
 # "$,.0f" (escaping it broke the dollar axes in Scenario 3, found in live testing).
-_RAW_KEYS = {"yfmt", "id", "col", "num", "den", "kind", "issue", "role"}
+_RAW_KEYS = {"yfmt", "id", "col", "num", "den", "kind", "issue", "role", "x_labels", "issue_types"}
 
 
 def _escape(obj, path=()):
@@ -46,6 +46,12 @@ def scenarios() -> list[dict]:
 
 def scenario(sid: str) -> dict:
     return next(s for s in scenarios() if s["id"] == sid)
+
+
+@lru_cache(maxsize=None)
+def primer() -> dict:
+    """Plain-language introductory lessons (added after Milestone 1 peer feedback)."""
+    return _escape(json.loads((ROOT / "content" / "primer.json").read_text()))
 
 
 @lru_cache(maxsize=None)

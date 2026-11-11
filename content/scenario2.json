@@ -8,7 +8,7 @@
     "walkthrough_traps": [],
     "highlight_traps": [],
     "hints": true,
-    "description": "No walkthrough this time. Hints unlock after your first flag or two minutes on the dashboard, and hint use is recorded. Not every chart has a problem."
+    "description": "No walkthrough this time. Hints are available on request: take a first look on your own, then ask for a hint wherever you are stuck. Not every chart has a problem."
   },
   "briefing": {
     "from": "Marcus Lee, Head of Digital Marketing, JT Morgan",
@@ -293,5 +293,14 @@
     "Level 2: \"The overall repeat rate rose, both segments fell, autopay rose, and purchases cluster under $500.\" (several facts, not connected)",
     "Level 3: \"Iterate. The overall rise is a mix shift; repeat use fell in both segments, so more spend would buy declining engagement. Customers avoid the fee at $500, so test the fee design.\" (connected reasoning)",
     "Level 4: Level 3, plus \"Revisit the budget once within-segment repeat rates hold steady for four weeks, and report repeat use by segment.\" (a decision rule that reaches beyond this case)"
-  ]
+  ],
+  "sort_metrics": [
+    "Repeat-plan rate: first-time users who open a second plan within 90 days",
+    "Share of FlexBuy users with a plan in the last 30 days",
+    "Customers who turn FlexBuy off in settings, per 1,000 users",
+    "Total plans since launch",
+    "Taps on the FlexBuy button",
+    "Average time spent on the FlexBuy screen"
+  ],
+  "plain_summary": "The overall repeat-use number is going up, and leadership wants to spend more. Your job: check whether customers are really coming back more, or whether the total is hiding something."
 }

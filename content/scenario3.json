@@ -306,5 +306,14 @@
     "Level 2: \"Volume doubled, near-prime defaults are rising, card interest is falling, and charge-offs are zero.\" (several facts, not connected)",
     "Level 3: \"Iterate. Charge-offs lag; early defaults for near-prime FlexBuy Plan tripled, and part of the volume moved from card balances at a lower rate. Keep the four-installment products and tighten FlexBuy Plan for near-prime.\" (connected reasoning)",
     "Level 4: Level 3, plus \"If near-prime first-payment defaults stay above 3% after tightening, withdraw FlexBuy Plan from that segment, and report value net of expected losses and cannibalized interest.\" (a decision rule that reaches beyond this case)"
-  ]
+  ],
+  "sort_metrics": [
+    "Net revenue per plan (fees, interest, and interchange minus funding cost and losses)",
+    "Volume financed by product, net of expected losses",
+    "On-time installment rate",
+    "First-payment default rate (first installment missed)",
+    "Card revolving balances moved into FlexBuy Plan",
+    "Gross volume financed (no adjustment for losses)"
+  ],
+  "plain_summary": "FlexBuy Plan is growing fast and no loans have been written off yet. Your job: check whether it is really making money safely, or whether the problems just have not shown up yet."
 }

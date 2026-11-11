@@ -37,12 +37,13 @@ class Flag:
     chart: str
     weeks: tuple[int, int]
     issue: str
-    confidence: int  # 50-100
+    confidence: int | None = None  # per-flag confidence was dropped after Milestone 1 peer feedback
     meta: dict = field(default_factory=dict)
 
     def normalized(self) -> "Flag":
         a, b = sorted(int(w) for w in self.weeks)
-        return Flag(self.chart, (a, b), self.issue, int(self.confidence), self.meta)
+        conf = None if self.confidence is None else int(self.confidence)
+        return Flag(self.chart, (a, b), self.issue, conf, self.meta)
 
 
 def _overlap(a: tuple[int, int], b: tuple[int, int]) -> int:
@@ -238,3 +239,32 @@ def self_assessment_check(ratings: dict[str, int], decision_score: float, eviden
         return ("Your decision and evidence matched the expert's, yet you rated yourself low. Your reasoning may be "
                 "stronger than you think; check the rubric levels against your own words.")
     return "Your self-rating is consistent with the parts the app could score automatically."
+
+
+def coverage_label(coverage_conf: int | None, detected: int, n_traps: int) -> str:
+    """One-word summary of the single confidence question, using the same thresholds as coverage_message."""
+    if coverage_conf is None or not n_traps:
+        return "Not rated"
+    if detected == n_traps:
+        return "Well judged" if coverage_conf >= 70 else "Underconfident"
+    return "Overconfident" if coverage_conf / 100 - detected / n_traps > 0.25 else "Well judged"
+
+
+# ---------------------------------------------------------------- Confidence pattern across scenarios
+def confidence_pattern(rows: list[dict], lesson_for_issue: dict[str, str]) -> dict:
+    """Turn one confidence rating per scenario into a pattern by concept (peer feedback, Milestone 1:
+    "if the learner is confident about certain concepts, identify that pattern and help close the gap").
+
+    rows: one per finished scenario: {"scenario", "coverage", "found_issues", "missed_issues"}.
+    Returns concepts missed while the learner was at least 80% sure they had found everything
+    ("blind spots"), other missed concepts, and concepts shown, each with the primer lesson to review."""
+    blind, missed, shown = {}, {}, {}
+    for r in rows:
+        sure = (r.get("coverage") or 0) >= 80
+        for issue in r["missed_issues"]:
+            (blind if sure else missed).setdefault(issue, []).append(r["scenario"])
+        for issue in r["found_issues"]:
+            shown.setdefault(issue, []).append(r["scenario"])
+    missed = {k: v for k, v in missed.items() if k not in blind}
+    as_list = lambda d: [{"issue": k, "scenarios": v, "lesson": lesson_for_issue.get(k)} for k, v in d.items()]
+    return {"blind_spots": as_list(blind), "missed": as_list(missed), "shown": as_list(shown)}
