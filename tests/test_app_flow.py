@@ -85,8 +85,9 @@ def test_full_scenario_flow(sc):
     # Stage 2: no per-flag confidence; issue type required; one coverage question before submit
     traps = _key(sid)
     assert not any(r.key == f"{sid}_f_conf" for r in at.radio)
+    at.selectbox(key=f"{sid}_f_issue").set_value(traps[0]["issue"]).run()
     _btn(at, f"{sid}_add").click().run()
-    assert any("issue type" in w.value for w in at.warning)
+    assert any("Mark the weeks" in w.value for w in at.warning)     # no default week range
 
     if sc["support"]["hints"]:                                  # available before any attempt
         assert any("first look" in c.value for c in at.caption)
@@ -205,3 +206,25 @@ def test_start_page_uses_proposal_branding():
     text = " ".join(m.value for m in at.markdown)
     assert "JT Morgan" in text and "JT FlexBuy" in text and "Harborline" not in text
     assert "flywheel" in " ".join(h.value for h in at.subheader).lower()
+
+
+def test_results_do_not_count_walkthrough_finds_as_shown():
+    sc = SCENARIOS[0]
+    sid = sc["id"]
+    traps = _key(sid)
+    guided = sc["support"]["walkthrough_traps"][0]
+    t = next(t for t in traps if t["id"] == guided)
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.sidebar.radio(key="page").set_value(sc["title"]).run()
+    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
+    at.run()
+    _add_flag(at, sid, t["charts"][0], tuple(t["weeks"]), t["issue"])
+    at.radio(key=f"{sid}_cov").set_value(90).run()
+    _btn(at, f"{sid}_submit").click().run()
+    at.session_state[f"sc_{sid}"]["stage"] = "summary"
+    at.session_state[f"sc_{sid}"]["sort"] = {"n_correct": 6, "n_total": 6}
+    at.session_state[f"sc_{sid}"]["define"] = {"n_correct": 3, "n_total": 3}
+    at.sidebar.radio(key="page").set_value("My results").run()
+    assert not at.exception
+    text = " ".join(m.value for m in at.markdown)
+    assert "Ideas you have shown" not in text

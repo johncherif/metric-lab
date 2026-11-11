@@ -300,3 +300,9 @@ def test_primer_dollar_signs_escaped_but_formats_raw():
         assert not re.search(r"(?<!\\)\$", s), (path, s)
     fmts = [l["chart"]["yfmt"] for l in p["lessons"] if "chart" in l]
     assert "$,.0f" in fmts
+
+
+def test_default_full_range_flag_does_not_match_late_trap():
+    # Found live: an untouched form (weeks 1-12) was credited on a weeks 5-12 trap.
+    assert match_flag(f("rate", 1, 12, "base_changed"), TRAPS)[0] is None
+    assert match_flag(f("rate", 4, 12, "base_changed"), TRAPS)[0]["id"] == "t_base"   # a slightly wide drag still counts

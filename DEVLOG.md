@@ -98,6 +98,15 @@ engagement, and value as a flywheel and states the growth-mindset premise of the
 
 Found while testing this iteration: the primer's progress bar was drawn before a quick check was recorded, so it read "0 of 7" after a correct answer. It is now drawn after the lessons.
 
+
+Found in live testing (Nov 10, deployed Milestone 1 build):
+
+| Finding | Change |
+|---|---|
+| A flag left on the form's defaults (first chart, weeks 1 to 12, no drag) was scored Correct for the weeks 5 to 12 base-change trap, because 8 of its 12 weeks fell inside the trap and the rule required only half. A learner could earn credit without locating anything. | Week selectors start empty and reset after each flag, so the learner must mark weeks by dragging or choosing. A flag now needs at least 75% of its weeks inside the trap; a slightly wide drag (weeks 4 to 12) still counts. |
+| On "My results", an issue found through the Scenario 1 walkthrough was listed under "ideas you have shown you can spot" | Walkthrough finds are excluded from that list, consistent with the guided/independent split in the review |
+| The deployed app still showed the Milestone 1 build and the dark theme | Redeploy, and add `.streamlit/config.toml` on GitHub |
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which

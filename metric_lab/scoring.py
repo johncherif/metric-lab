@@ -2,7 +2,8 @@
 
 Design notes (each one is an edge case found while building):
   * A flag only matches a trap if MOST of the flag lies inside the trap's weeks
-    (MIN_INSIDE_SHARE). Otherwise one flag covering weeks 1-12 would "find" every trap.
+    (MIN_INSIDE_SHARE). Otherwise one flag covering weeks 1-12 would "find" every trap. Raised from
+    0.5 to 0.75 after live testing: an untouched form (weeks 1-12) was credited on a weeks 5-12 trap.
   * Each trap can be credited once. Extra flags on an already-found trap are
     labelled "duplicate" and are not counted as false alarms or as correct.
   * When a flag overlaps several traps on the same chart, it is matched to the trap
@@ -14,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-MIN_INSIDE_SHARE = 0.5   # at least half of a flag's weeks must fall inside the trap
+MIN_INSIDE_SHARE = 0.75  # most of a flag must fall inside the trap (0.5 let a default weeks 1-12 flag match a 5-12 trap)
 SCORE_VALUE = {"correct": 1.0, "partial": 0.5, "false_alarm": 0.0, "duplicate": None}
 
 

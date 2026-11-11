@@ -291,16 +291,19 @@ def _on_chart_select(sid: str, chart_id: str, key: str) -> None:
 def _add_flag(sid: str) -> None:
     stt = state(sid)
     issue = st.session_state.get(f"{sid}_f_issue")
-    if not issue:
-        st.session_state[f"{sid}_f_error"] = "Choose an issue type before adding the flag."
+    w0, w1 = st.session_state.get(f"{sid}_f_w0"), st.session_state.get(f"{sid}_f_w1")
+    if w0 is None or w1 is None or not issue:
+        st.session_state[f"{sid}_f_error"] = ("Mark the weeks (drag across them on a chart, or pick them) and choose "
+                                              "an issue type before adding the flag.")
         return
     st.session_state.pop(f"{sid}_f_error", None)
-    fl = S.Flag(st.session_state[f"{sid}_f_chart"], (st.session_state[f"{sid}_f_w0"], st.session_state[f"{sid}_f_w1"]),
+    fl = S.Flag(st.session_state[f"{sid}_f_chart"], (w0, w1),
                 issue, None, {"id": stt["next_flag_id"]})
     stt["next_flag_id"] += 1
     stt["flags"].append(fl)
     stt["sel_ver"] += 1                      # clears the box selection on every chart
     st.session_state[f"{sid}_f_issue"] = None
+    st.session_state[f"{sid}_f_w0"] = st.session_state[f"{sid}_f_w1"] = None   # no default range to submit blindly
     log(sid, "dashboard", "flag_added", chart=fl.chart, weeks=fl.weeks, issue=fl.issue)
 
 
@@ -383,14 +386,14 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     sid, stt = sc["id"], state(sc["id"])
     st.subheader("Add a flag")
     st.session_state.setdefault(f"{sid}_f_chart", next(iter(charts)))
-    st.session_state.setdefault(f"{sid}_f_w0", 1)
-    st.session_state.setdefault(f"{sid}_f_w1", 12)
+    st.session_state.setdefault(f"{sid}_f_w0", None)   # no default: an untouched 1-12 range was credited
+    st.session_state.setdefault(f"{sid}_f_w1", None)   # as a correct flag in live testing
     c1, c2 = st.columns(2)
     with c1:
         st.selectbox("Chart", list(charts), format_func=lambda c: plain(charts[c]["title"]), key=f"{sid}_f_chart")
         w0, w1 = st.columns(2)
-        w0.selectbox("From week", list(range(1, 13)), key=f"{sid}_f_w0")
-        w1.selectbox("To week", list(range(1, 13)), key=f"{sid}_f_w1")
+        w0.selectbox("From week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w0")
+        w1.selectbox("To week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w1")
     with c2:
         st.selectbox("What kind of issue is it?", list(ISSUES), format_func=ISSUES.get, index=None,
                      placeholder="Choose an issue type", key=f"{sid}_f_issue")
@@ -707,7 +710,8 @@ def _confidence_pattern() -> None:
             continue
         fr = stt["flag_result"]
         by_id = {t["id"]: t for t in C.traps(sc["id"])}
-        found = {s["trap_id"] for s in fr["scored"] if s["outcome"] == "correct"}
+        guided = set(sc["support"]["walkthrough_traps"])   # walkthrough finds show guidance working, not skill
+        found = {s["trap_id"] for s in fr["scored"] if s["outcome"] == "correct"} - guided
         rows.append({"scenario": sc["title"].split(":")[0], "coverage": stt["coverage"],
                      "found_issues": [by_id[t]["issue"] for t in found],
                      "missed_issues": [t["issue"] for t in fr["missed"]] +
