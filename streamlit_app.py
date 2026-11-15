@@ -285,6 +285,9 @@ def _on_chart_select(sid: str, chart_id: str, key: str) -> None:
     if weeks:
         st.session_state[f"{sid}_f_chart"] = chart_id
         st.session_state[f"{sid}_f_w0"], st.session_state[f"{sid}_f_w1"] = weeks
+        # Clear the drawn box: starting a new drag inside an old box moved it instead of drawing a new one
+        # (found live: a second drag returned weeks 12-12). The selection is redrawn as shading instead.
+        state(sid)["sel_ver"] += 1
         title = plain({c["id"]: c for c in C.scenario(sid)["charts"]}[chart_id]["title"])
         # Visible confirmation: in testing, the form filled in off-screen and the drag looked broken.
         st.session_state[f"{sid}_sel_msg"] = (f"Selected weeks {weeks[0]}–{weeks[1]} on \"{title}\". "
@@ -354,10 +357,14 @@ def stage_dashboard(sc: dict) -> None:
             shades[t["charts"][0]].append((t["weeks"], "found" if t["id"] in found else "missed"))
 
     if not submitted:
+        w_a, w_b = st.session_state.get(f"{sid}_f_w0"), st.session_state.get(f"{sid}_f_w1")
+        pending_chart = st.session_state.get(f"{sid}_f_chart")
+        if w_a is not None and w_b is not None and pending_chart in shades:
+            shades[pending_chart].append((sorted([w_a, w_b]), "pending"))   # show the marked weeks on the chart
         if msg := st.session_state.pop(f"{sid}_sel_msg", None):
             st.toast(msg)
         _sticky_panel_css(sid)
-        left, right = st.columns([2.2, 1], gap="large")
+        left, right = st.columns([1.6, 1], gap="medium")
         with left:
             st.caption("To flag something, drag a box across the weeks of interest on a chart (or click a point). "
                        "The flag panel fills in automatically. Some charts may show nothing unusual.")
@@ -403,13 +410,20 @@ def _charts(sc: dict, charts: dict, seg: str, shades: dict, interactive: bool, n
 
 
 def _sticky_panel_css(sid: str) -> None:
-    """Keep the flag panel beside the charts while scrolling (spatial contiguity). On narrow screens the
-    columns stack and the panel scrolls normally."""
+    """Keep the flag panel beside the charts while scrolling (spatial contiguity). Container queries use the
+    width of the main area, not the window, because the sidebar takes space: below 700 px the panel was too
+    narrow to read (found live), so the columns stack and the panel scrolls normally."""
     st.markdown(f"""<style>
-    @media (min-width: 900px) {{
+    [data-testid="stMainBlockContainer"] {{ container-type: inline-size; }}
+    @container (min-width: 700px) {{
       div[data-testid="stColumn"]:has(.st-key-{sid}_flagpanel) {{
         position: sticky; top: 3.75rem; align-self: flex-start;
         max-height: calc(100vh - 5rem); overflow-y: auto; }}
+    }}
+    @container (max-width: 699px) {{
+      div[data-testid="stHorizontalBlock"]:has(.st-key-{sid}_flagpanel) {{ flex-wrap: wrap; }}
+      div[data-testid="stHorizontalBlock"]:has(.st-key-{sid}_flagpanel) > div[data-testid="stColumn"] {{
+        min-width: 100% !important; flex: 1 1 100% !important; }}
     }}
     </style>""", unsafe_allow_html=True)
 
