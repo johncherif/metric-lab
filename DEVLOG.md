@@ -107,6 +107,19 @@ Found in live testing (Nov 10, deployed Milestone 1 build):
 | On "My results", an issue found through the Scenario 1 walkthrough was listed under "ideas you have shown you can spot" | Walkthrough finds are excluded from that list, consistent with the guided/independent split in the review |
 | The deployed app still showed the Milestone 1 build and the dark theme | Redeploy, and add `.streamlit/config.toml` on GitHub |
 
+## Design pass after live testing (Nov 14)
+
+| Finding (live test, Nov 14) | Change | Principle |
+|---|---|---|
+| Dragging on a chart filled the flag form about 1,100 px further down, off-screen, so nothing showed the drag had worked | The flag panel sits beside the charts and stays in view while scrolling (stacks below on narrow screens); a toast confirms each selection; the panel shows "No weeks selected yet" until weeks are marked | Visibility of system status (Nielsen); spatial contiguity (Mayer) |
+| The dashboard step held the walkthrough, five charts, the form, hints, the coverage question, and the full review on one long page | After submitting, the review opens in its own tab, with the charts and answer shading in a second tab | Segmenting (Mayer) |
+| Two charts side by side were cramped at laptop widths | Charts are stacked in one column while flagging | Legibility |
+| Large red boxes for every miss read as a failing grade beside the growth-mindset note | Incorrect answers, misses, and false alarms use amber instead of red throughout | Attribution theory; growth mindset |
+| `config.toml` sat at the repository root, so the light theme never applied | Moved to `.streamlit/config.toml` | |
+| The repository held duplicate copies of most files at the root and an old `metric-lab 3` folder | Clean upload package; duplicates listed for deletion | Maintainability |
+
+Still open: the issue-type menu shows learners the seven issue types, which cues what to look for. Kept as a deliberate scaffold; to be discussed in the report as a limit on how well the dashboard step measures unaided detection.
+
 ## Known limitations (candidates for future work)
 
 * **Flags are chart-level, not line-level.** On multi-line charts (default rate by product), a flag cannot specify which

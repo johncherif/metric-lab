@@ -189,7 +189,7 @@ def stage_brief(sc: dict) -> None:
                     st.rerun()
         else:
             for r in stt["retrieval"]["results"]:
-                (st.success if r["correct"] else st.error)(
+                (st.success if r["correct"] else st.warning)(
                     ("Correct. " if r["correct"] else f"Not quite: the answer is \"{r['answer_text']}\". ") + r["why"])
             ready_retrieval = True
 
@@ -221,7 +221,7 @@ def stage_metrics(sc: dict) -> None:
             r = next(r for r in stt["sort"]["results"] if r["name"] == m["name"])
             msg = (f"Correct: {ROLES[r['correct_role']]}. " if r["correct"]
                    else f"Not quite. This is a **{ROLE_NOUNS[r['correct_role']]}**. ") + r["feedback"]
-            (st.success if r["correct"] else st.error)(msg)
+            (st.success if r["correct"] else st.warning)(msg)
     if not checked:
         n_missing = sum(v is None for v in answers.values())
         if st.button("Check my answers", type="primary", key=f"{sid}_check"):
@@ -268,7 +268,7 @@ def _define_it(sc: dict) -> None:
                 st.rerun()
         return
     for p in stt["define"]["parts"]:
-        (st.success if p["correct"] else st.error)(
+        (st.success if p["correct"] else st.warning)(
             f"**{plain(p['label'])}:** {p['chosen']}. " +
             ("" if p["correct"] else f"A better choice is \"{p['correct_option']}\". ") + p["feedback"])
     st.markdown("**Guardrails an expert might name** (compare with yours):")
@@ -285,6 +285,10 @@ def _on_chart_select(sid: str, chart_id: str, key: str) -> None:
     if weeks:
         st.session_state[f"{sid}_f_chart"] = chart_id
         st.session_state[f"{sid}_f_w0"], st.session_state[f"{sid}_f_w1"] = weeks
+        title = plain({c["id"]: c for c in C.scenario(sid)["charts"]}[chart_id]["title"])
+        # Visible confirmation: in testing, the form filled in off-screen and the drag looked broken.
+        st.session_state[f"{sid}_sel_msg"] = (f"Selected weeks {weeks[0]}–{weeks[1]} on \"{title}\". "
+                                              "Now choose the issue type in the flag panel.")
         log(sid, "dashboard", "chart_selection", chart=chart_id, weeks=weeks)
 
 
@@ -350,54 +354,82 @@ def stage_dashboard(sc: dict) -> None:
             shades[t["charts"][0]].append((t["weeks"], "found" if t["id"] in found else "missed"))
 
     if not submitted:
-        st.caption("To flag something, drag a box across the weeks of interest on a chart (or click a point). "
-                   "The flag form below fills in automatically, and you can adjust it there. Some charts may show "
-                   "nothing unusual.")
-    cols = st.columns(2)
+        if msg := st.session_state.pop(f"{sid}_sel_msg", None):
+            st.toast(msg)
+        _sticky_panel_css(sid)
+        left, right = st.columns([2.2, 1], gap="large")
+        with left:
+            st.caption("To flag something, drag a box across the weeks of interest on a chart (or click a point). "
+                       "The flag panel fills in automatically. Some charts may show nothing unusual.")
+            _charts(sc, charts, seg, shades, interactive=True, n_cols=1)
+        with right:
+            with st.container(border=True, key=f"{sid}_flagpanel"):
+                _flag_builder(sc, charts)
+                _hints(sc, traps)
+                _submit_flags(sc, traps)
+        return
+
+    # After submitting, the review comes first in its own tab (segmenting: one task per view).
+    review_tab, charts_tab = st.tabs(["Your review", "Charts with answers marked"])
+    with review_tab:
+        _flag_review(sc, charts, traps, result)
+    with charts_tab:
+        st.caption("Green shading: issues you found. Orange shading: issues you missed.")
+        _charts(sc, charts, seg, shades, interactive=False, n_cols=2)
+
+
+def _charts(sc: dict, charts: dict, seg: str, shades: dict, interactive: bool, n_cols: int) -> None:
+    sid, stt = sc["id"], state(sc["id"])
+    cols = st.columns(n_cols)
     for i, (cid, ch) in enumerate(charts.items()):
         frame = C.chart_frame(sid, ch, seg)
         fig = figure(frame, ch, shades[cid])
-        with cols[i % 2]:
+        with cols[i % n_cols]:
             st.markdown(f"**{ch['title']}**")
-            if submitted:
-                st.plotly_chart(fig, key=f"{sid}_chart_{cid}_done", config={"displayModeBar": False},
-                                alt=_chart_alt(ch, seg))
-            else:
+            if interactive:
                 key = f"{sid}_chart_{cid}_{stt['sel_ver']}"
                 st.plotly_chart(fig, key=key, on_select=partial(_on_chart_select, sid, cid, key),
                                 selection_mode=("box", "points"), config={"displayModeBar": False},
                                 alt=_chart_alt(ch, seg))
+            else:
+                st.plotly_chart(fig, key=f"{sid}_chart_{cid}_done", config={"displayModeBar": False},
+                                alt=_chart_alt(ch, seg))
             with st.expander("View as a table"):   # text alternative to the chart (UDL)
                 st.dataframe(frame.set_index("week").round(4), width="stretch")
     st.download_button("Download this scenario's data (CSV)", C.data(sid).to_csv(index=False).encode(),
-                       f"{sid}_data.csv", "text/csv", key=f"{sid}_dl_data",
+                       f"{sid}_data.csv", "text/csv", key=f"{sid}_dl_data_{'live' if interactive else 'done'}",
                        help="Explore the raw weekly counts in your own tool, such as Excel, Tableau, or Power BI.",
                        on_click=lambda: log(sid, "dashboard", "data_downloaded"))
 
-    if not submitted:
-        _flag_builder(sc, charts)
-        _hints(sc, traps)
-        _submit_flags(sc, traps)
-    else:
-        _flag_review(sc, charts, traps, result)
+
+def _sticky_panel_css(sid: str) -> None:
+    """Keep the flag panel beside the charts while scrolling (spatial contiguity). On narrow screens the
+    columns stack and the panel scrolls normally."""
+    st.markdown(f"""<style>
+    @media (min-width: 900px) {{
+      div[data-testid="stColumn"]:has(.st-key-{sid}_flagpanel) {{
+        position: sticky; top: 3.75rem; align-self: flex-start;
+        max-height: calc(100vh - 5rem); overflow-y: auto; }}
+    }}
+    </style>""", unsafe_allow_html=True)
 
 
 def _flag_builder(sc: dict, charts: dict) -> None:
     sid, stt = sc["id"], state(sc["id"])
-    st.subheader("Add a flag")
+    st.markdown("**Add a flag**")
     st.session_state.setdefault(f"{sid}_f_chart", next(iter(charts)))
     st.session_state.setdefault(f"{sid}_f_w0", None)   # no default: an untouched 1-12 range was credited
     st.session_state.setdefault(f"{sid}_f_w1", None)   # as a correct flag in live testing
-    c1, c2 = st.columns(2)
-    with c1:
-        st.selectbox("Chart", list(charts), format_func=lambda c: plain(charts[c]["title"]), key=f"{sid}_f_chart")
-        w0, w1 = st.columns(2)
-        w0.selectbox("From week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w0")
-        w1.selectbox("To week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w1")
-    with c2:
-        st.selectbox("What kind of issue is it?", list(ISSUES), format_func=ISSUES.get, index=None,
-                     placeholder="Choose an issue type", key=f"{sid}_f_issue")
-    st.button("Add flag", on_click=_add_flag, args=(sid,), key=f"{sid}_add")
+    w_a, w_b = st.session_state[f"{sid}_f_w0"], st.session_state[f"{sid}_f_w1"]
+    if w_a is None or w_b is None:
+        st.caption("No weeks selected yet. Drag across a chart, or pick the weeks below.")
+    st.selectbox("Chart", list(charts), format_func=lambda c: plain(charts[c]["title"]), key=f"{sid}_f_chart")
+    w0, w1 = st.columns(2)
+    w0.selectbox("From week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w0")
+    w1.selectbox("To week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w1")
+    st.selectbox("What kind of issue is it?", list(ISSUES), format_func=ISSUES.get, index=None,
+                 placeholder="Choose an issue type", key=f"{sid}_f_issue")
+    st.button("Add flag", on_click=_add_flag, args=(sid,), key=f"{sid}_add", width="stretch")
     if err := st.session_state.get(f"{sid}_f_error"):
         st.warning(err)
 
@@ -405,10 +437,8 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     if not stt["flags"]:
         st.caption("No flags yet.")
     for fl in stt["flags"]:
-        a, b = st.columns([6, 1])
-        a.write(f"{charts[fl.chart]['title']} · weeks {fl.weeks[0]}–{fl.weeks[1]} · "
-                f"{ISSUES[fl.issue]}")
-        b.button("Remove", key=f"{sid}_rm_{fl.meta['id']}", on_click=_remove_flag, args=(sid, fl.meta["id"]))
+        st.write(f"{charts[fl.chart]['title']} · weeks {fl.weeks[0]}–{fl.weeks[1]} · {ISSUES[fl.issue]}")
+        st.button("Remove", key=f"{sid}_rm_{fl.meta['id']}", on_click=_remove_flag, args=(sid, fl.meta["id"]))
 
 
 def _hints(sc: dict, traps: list[dict]) -> None:
@@ -506,10 +536,10 @@ def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
             else:
                 st.info(head + " This issue was already credited to another flag.")
         else:
-            st.error(head + " Nothing misleading was planted here. Not every movement on a chart is a problem; "
+            st.warning(head + " Nothing misleading was planted here. Not every movement on a chart is a problem; "
                             "ask whether the change is larger than normal week-to-week noise.")
     for t in res["missed"]:
-        st.error(f"**Missed: {t['title']}** ({charts[t['charts'][0]]['title']}, weeks "
+        st.warning(f"**Missed: {t['title']}** ({charts[t['charts'][0]]['title']}, weeks "
                  f"{t['weeks'][0]}–{t['weeks'][1]}). {ISSUES[t['issue']]}. {t['explanation']}")
         _lesson_link(t["issue"], f"{sid}_lesson_{t['id']}")
     st.markdown("**Confidence check**")
@@ -585,7 +615,7 @@ def stage_decision(sc: dict) -> None:
 
     r = stt["decision"]
     st.subheader("How your decision compares")
-    (st.success if r["decision_score"] == 1 else st.warning if r["decision_score"] > 0 else st.error)(
+    (st.success if r["decision_score"] == 1 else st.warning)(
         r["decision_feedback"])
     st.write(f"You cited **{r['required_cited']} of {r['required_total']}** key observations.")
     by_id = {e["id"]: e for e in d["evidence"]}
@@ -725,7 +755,7 @@ def _confidence_pattern() -> None:
         st.write("You were at least 80% sure you had found everything, but missed these. They are the most "
                  "useful ones to review, because confidence hides them:")
         for i, b in enumerate(pat["blind_spots"]):
-            st.error(f"**{ISSUES[b['issue']]}** ({', '.join(b['scenarios'])})")
+            st.warning(f"**{ISSUES[b['issue']]}** ({', '.join(b['scenarios'])})")
             _lesson_link(b["issue"], f"res_blind_{i}")
     if pat["missed"]:
         st.write("Missed, and you were already unsure:")
@@ -766,7 +796,7 @@ def primer_page() -> None:
                            format_func=lambda k, q=q: q["options"][k], key=f"primer_q_{les['id']}")
             if ans is not None:
                 ok = ans == q["answer"]
-                (st.success if ok else st.error)(("Yes. " if ok else
+                (st.success if ok else st.warning)(("Yes. " if ok else
                                                   f"Not quite: the answer is \"{q['options'][q['answer']]}\". ") + q["why"])
                 if les["id"] not in done:
                     done[les["id"]] = ok

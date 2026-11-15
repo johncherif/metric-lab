@@ -77,7 +77,7 @@ def test_full_scenario_flow(sc):
     at.text_input(key=f"{sid}_def_guard").input("Opt-out rate, to make sure growth is not annoying customers").run()
     _btn(at, f"{sid}_def_check").click().run()
     assert not at.exception
-    assert any("A better choice is" in e.value for e in at.error)
+    assert any("A better choice is" in e.value for e in at.warning)
     assert sum(1 for s in at.success if s.value.startswith("**")) >= len(d["parts"]) - 1
     _btn(at, f"{sid}_go_dash").click().run()
     assert not at.exception
@@ -111,7 +111,7 @@ def test_full_scenario_flow(sc):
     assert not at.exception
     assert any(f"{len(traps)} of {len(traps)}" in m.value for m in at.metric)
     assert any("Duplicate" in m.value for m in list(at.info) + list(at.warning))
-    assert any("False alarm" in e.value for e in at.error)
+    assert any("False alarm" in e.value for e in at.warning)
     assert any("Checks to run on any dashboard" in m.value for m in at.markdown)
     assert any("sure you had found every issue" in m.value for m in at.markdown)
     if sc["support"]["walkthrough_traps"]:
@@ -228,3 +228,44 @@ def test_results_do_not_count_walkthrough_finds_as_shown():
     assert not at.exception
     text = " ".join(m.value for m in at.markdown)
     assert "Ideas you have shown" not in text
+
+
+def test_dashboard_layout_panel_status_and_review_tabs():
+    sc = SCENARIOS[0]
+    sid = sc["id"]
+    traps = _key(sid)
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.sidebar.radio(key="page").set_value(sc["title"]).run()
+    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
+    at.run()
+    assert any("No weeks selected yet" in c.value for c in at.caption)        # status visible in the panel
+    assert not at.tabs                                                        # no tabs before submitting
+    t = traps[-1]
+    _add_flag(at, sid, t["charts"][0], tuple(t["weeks"]), t["issue"])
+    at.radio(key=f"{sid}_cov").set_value(70).run()
+    _btn(at, f"{sid}_submit").click().run()
+    assert not at.exception
+    assert [tab.label for tab in at.tabs] == ["Your review", "Charts with answers marked"]
+    assert any(w.value.startswith("**Missed:") for w in at.warning)            # misses are amber, not red
+    assert not at.error
+
+
+def test_selection_confirmation_is_shown_as_toast():
+    import importlib.util, sys
+    sc = SCENARIOS[0]
+    sid = sc["id"]
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.sidebar.radio(key="page").set_value(sc["title"]).run()
+    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
+    at.run()
+    cid = sc["charts"][1]["id"]
+    key = f"{sid}_chart_{cid}_0"
+    # Simulate the Plotly selection payload the callback reads, then the rerun it triggers.
+    at.session_state[key] = {"selection": {"box": [{"x": [4.6, 12.3]}], "points": []}}
+    at.session_state[f"{sid}_f_chart"] = cid
+    at.session_state[f"{sid}_f_w0"], at.session_state[f"{sid}_f_w1"] = 5, 12
+    at.session_state[f"{sid}_sel_msg"] = "Selected weeks 5–12"
+    at.run()
+    assert not at.exception
+    assert any("Selected weeks 5–12" in t.value for t in at.toast)
+    assert not any("No weeks selected yet" in c.value for c in at.caption)
