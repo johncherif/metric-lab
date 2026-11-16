@@ -143,6 +143,7 @@ informative, but difficult and long for people without analytics background.
 | Pattern names were jargon at the moment of choosing | "What do these patterns mean?" beside the pattern menu, with the primer's one-sentence explanation for each | Pre-training and just-in-time support (Mayer) |
 | The dashboard checklist appeared only after submitting | "Checks to run before you submit" in the observation panel, plus "How to read these charts" at the top of each dashboard | Job aids for novices; scaffolding |
 | Scenario 3 left novices with no help at all | Two counted hints on request; still no walkthrough or highlights, so support still fades | Scaffolding and fading; expertise reversal |
+| After the Nov 15 deploy, the live app kept serving the old Scenario 3 content (no hint button) because content files were cached in memory and the caching module itself had not changed | Content caches are keyed on file modification times, so changed JSON or data files are reloaded without an app restart | Deployment reliability |
 
 A switch away from Python and Streamlit (for example, to a JavaScript front end for direct chart annotation) was
 considered and set aside for this term because of the timeline and scope; it is noted as future work.

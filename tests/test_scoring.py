@@ -338,3 +338,21 @@ def test_scenario3_default_rate_accepts_guardrail():
 def test_split_guided_counts_spotted():
     r = score_flags([f("rate", 5, 12, "novelty")], TRAPS)
     assert split_guided(r, [], TRAPS)["independent_found"] == 1
+
+
+def test_content_cache_refreshes_when_a_file_changes(tmp_path, monkeypatch):
+    import shutil
+    from metric_lab import content as CC
+    root = tmp_path / "app"
+    shutil.copytree(ROOT / "content", root / "content")
+    shutil.copytree(ROOT / "data", root / "data")
+    monkeypatch.setattr(CC, "ROOT", root)
+    before = CC.scenario("scenario3")["support"]["label"]
+    p = root / "content" / "scenario3.json"
+    raw = json.loads(p.read_text())
+    raw["support"]["label"] = "Changed"
+    p.write_text(json.dumps(raw))
+    import os
+    st_ = p.stat()
+    os.utime(p, ns=(st_.st_atime_ns, st_.st_mtime_ns + 10**9))
+    assert CC.scenario("scenario3")["support"]["label"] == "Changed" != before

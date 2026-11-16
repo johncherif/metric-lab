@@ -11,8 +11,20 @@ ROOT = Path(__file__).resolve().parents[1]
 ALL_SEGMENTS = "All customers"
 
 
-@lru_cache(maxsize=None)
+def _version() -> tuple:
+    """Modification times of every content and data file. Caches below are keyed on it, so new content is
+    picked up without restarting the app (found live: after a deploy that changed only JSON files, Streamlit
+    Cloud kept serving the old cached scenarios because this module itself had not changed)."""
+    files = sorted((ROOT / "content").glob("*.json")) + sorted((ROOT / "data").glob("*"))
+    return tuple(f.stat().st_mtime_ns for f in files)
+
+
 def common() -> dict:
+    return _common(_version())
+
+
+@lru_cache(maxsize=4)
+def _common(_v) -> dict:
     return json.loads((ROOT / "content" / "common.json").read_text())
 
 
@@ -38,8 +50,12 @@ def _escape(obj, path=()):
     return md(obj)
 
 
-@lru_cache(maxsize=None)
 def scenarios() -> list[dict]:
+    return _scenarios(_version())
+
+
+@lru_cache(maxsize=4)
+def _scenarios(_v) -> list[dict]:
     items = [_escape(json.loads(p.read_text())) for p in (ROOT / "content").glob("scenario*.json")]
     return sorted(items, key=lambda s: s["order"])
 
@@ -48,19 +64,31 @@ def scenario(sid: str) -> dict:
     return next(s for s in scenarios() if s["id"] == sid)
 
 
-@lru_cache(maxsize=None)
 def primer() -> dict:
+    return _primer(_version())
+
+
+@lru_cache(maxsize=4)
+def _primer(_v) -> dict:
     """Plain-language introductory lessons (added after Milestone 1 peer feedback)."""
     return _escape(json.loads((ROOT / "content" / "primer.json").read_text()))
 
 
-@lru_cache(maxsize=None)
 def data(sid: str) -> pd.DataFrame:
+    return _data(sid, _version())
+
+
+@lru_cache(maxsize=16)
+def _data(sid: str, _v) -> pd.DataFrame:
     return pd.read_csv(ROOT / "data" / f"{sid}_data.csv")
 
 
-@lru_cache(maxsize=None)
 def traps(sid: str) -> list[dict]:
+    return _traps(sid, _version())
+
+
+@lru_cache(maxsize=16)
+def _traps(sid: str, _v) -> list[dict]:
     return _escape(json.loads((ROOT / "data" / f"{sid}_key.json").read_text())["traps"])
 
 
