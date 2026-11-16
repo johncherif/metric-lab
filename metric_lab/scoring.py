@@ -52,6 +52,13 @@ def _overlap(a: tuple[int, int], b: tuple[int, int]) -> int:
     return max(0, min(a[1], b[1]) - max(a[0], b[0]) + 1)
 
 
+def accepts(trap: dict, issue: str) -> bool:
+    """A trap's main pattern, plus any alternative that is also a fair reading of the data. Example: the
+    first-payment default rate is itself a guardrail (the sorting step says so), so "a guardrail is getting
+    worse" is accepted there alongside "lagging indicator" (learner feedback, Nov 15)."""
+    return issue == trap["issue"] or issue in trap.get("also_accept", [])
+
+
 def match_flag(flag: Flag, traps: list[dict]) -> tuple[dict | None, int]:
     """Return (trap, overlap_weeks) for the best qualifying trap, or (None, 0)."""
     f = flag.normalized()
@@ -62,7 +69,7 @@ def match_flag(flag: Flag, traps: list[dict]) -> tuple[dict | None, int]:
             continue
         ov = _overlap(f.weeks, tuple(t["weeks"]))
         if ov and ov / width >= MIN_INSIDE_SHARE:
-            candidates.append((t["issue"] == f.issue, ov, t))
+            candidates.append((accepts(t, f.issue), ov, t))
     if not candidates:
         return None, 0
     same_type, ov, trap = max(candidates, key=lambda c: (c[0], c[1]))
@@ -79,7 +86,7 @@ def score_flags(flags: list[Flag], traps: list[dict]) -> dict:
             outcome, trap_id = "false_alarm", None
         else:
             trap_id = trap["id"]
-            outcome = "correct" if trap["issue"] == fl.issue else "partial"
+            outcome = "correct" if accepts(trap, fl.issue) else "partial"
             prev = found.get(trap_id)
             if prev == "correct" or (prev == "partial" and outcome == "partial"):
                 outcome = "duplicate"
@@ -97,8 +104,10 @@ def score_flags(flags: list[Flag], traps: list[dict]) -> dict:
     detected = sum(1 for t in traps if found.get(t["id"]) == "correct")
     partial = sum(1 for t in traps if found.get(t["id"]) == "partial")
     false_alarms = sum(1 for s in scored if s["outcome"] == "false_alarm")
+    # "Spotted" = located in the right chart and weeks, whether or not the pattern was named precisely.
+    # Partial answers are credited as spotted, with the name as room for improvement (learner feedback).
     return {"scored": scored, "missed": missed, "n_traps": len(traps), "detected": detected,
-            "partial": partial, "false_alarms": false_alarms,
+            "partial": partial, "spotted": detected + partial, "false_alarms": false_alarms,
             "score": (detected + 0.5 * partial) / len(traps) if traps else 0.0}
 
 
@@ -203,7 +212,7 @@ def split_guided(flag_result: dict, guided_trap_ids: list[str], traps: list[dict
 
     Flags on walkthrough traps show that guidance works, not that the learner can detect the issue,
     so they are reported separately and excluded from independent-detection evidence."""
-    found = {s["trap_id"] for s in flag_result["scored"] if s["outcome"] == "correct"}
+    found = {s["trap_id"] for s in flag_result["scored"] if s["outcome"] in ("correct", "partial")}
     guided = set(guided_trap_ids)
     indep_traps = [t for t in traps if t["id"] not in guided]
     return {"guided_found": len(found & guided), "guided_total": len(guided),
@@ -219,7 +228,7 @@ def coverage_message(coverage_conf: int | None, detected: int, n_traps: int) -> 
         return ""
     found_share = detected / n_traps
     gap = coverage_conf / 100 - found_share
-    base = f"You were {coverage_conf}% sure you had found every issue; you found {detected} of {n_traps}."
+    base = f"You were {coverage_conf}% sure you had spotted everything; you spotted {detected} of {n_traps}."
     if detected == n_traps:
         return base + " Well judged." if coverage_conf >= 70 else base + " You found them all; trust your scan more."
     if gap > 0.25:

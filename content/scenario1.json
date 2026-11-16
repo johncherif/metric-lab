@@ -170,7 +170,7 @@
       "Start with the chart that worried leadership: the plan creation rate drops sharply in week 5.",
       "Before concluding that customers lost interest, check the denominator. Look at 'Customers shown the offer': it more than doubled in the same week. That is the eligibility expansion.",
       "Now use the segment filter and choose 'Originally eligible'. The rate for the original base is steady at about 4.5% and even rising. The blended rate fell because a large new group with a lower rate joined the base.",
-      "So the right flag is on the creation-rate chart, weeks 5 to 12, with the issue type 'The base changed (denominator shift)'. Add that flag below to continue."
+      "So the right observation is on the creation-rate chart, weeks 5 to 12, with the pattern 'The base changed (denominator shift)'. Record it in the observation panel to continue."
     ]
   },
   "hints": {

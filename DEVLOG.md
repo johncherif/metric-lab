@@ -118,7 +118,34 @@ Found in live testing (Nov 10, deployed Milestone 1 build):
 | `config.toml` sat at the repository root, so the light theme never applied | Moved to `.streamlit/config.toml` | |
 | The repository held duplicate copies of most files at the root and an old `metric-lab 3` folder | Clean upload package; duplicates listed for deletion | Maintainability |
 
+
+Found in live testing after the Nov 15 upload:
+
+| Finding | Change |
+|---|---|
+| Starting a second drag inside the first selection box moved that box instead of drawing a new one, so the weeks came out as 12 to 12 | The box clears after each selection, and the marked weeks are drawn on the chart as "Your selection" shading, which also updates when weeks are picked by hand |
+| With the sidebar open on a laptop-width window, the side panel shrank to about 130 px and the dropdowns were cut off ("Custome...") | The panel's width is based on the main area, not the window: below 700 px it moves under the charts (the confirmation message and shading still show the selection); above that it is wider (ratio 1.6 to 1) |
+| `config.toml` was uploaded to the repository root again | GitHub's upload button cannot create the hidden `.streamlit` folder; it must be made with "Create new file" |
+
 Still open: the issue-type menu shows learners the seven issue types, which cues what to look for. Kept as a deliberate scaffold; to be discussed in the report as a limit on how well the dashboard step measures unaided detection.
+
+## Accessibility and difficulty pass (Nov 15)
+
+Feedback from the author's own run of Scenario 3, two coworkers, and earlier testers: the experience is intuitive and
+informative, but difficult and long for people without analytics background.
+
+| Feedback | Change | Principle |
+|---|---|---|
+| Scenario 3 scored "0 of 2" when both problems were located in the right chart and weeks, only named differently | Review shows "Issues spotted" (right chart and weeks) separately from "Named precisely". A located but differently named answer is shown in blue as "Spotted", with the better name as room to improve and a link to its lesson. Coverage confidence, the results table, and the blind-spot list use the spotted count | Feedback that credits progress (Hattie & Timperley); growth mindset |
+| The first-payment default rate is itself a guardrail (the sorting step calls it one), yet "a guardrail is getting worse" was marked wrong there | Traps can list accepted alternatives; on that chart "guardrail" counts as correct, with a note that "lagging indicator" is the sharper name | Construct validity: do not penalize a defensible reading |
+| "Flags" framed patterns such as Simpson's paradox and the novelty effect as errors to catch, which they are not | Learner-facing language changed to recording observations and choosing the pattern that explains them ("Record an observation", "Which pattern explains it?", "Not supported by the data") | Authentic task framing |
+| Product terms were only on the start page | "The three JT FlexBuy products" reference in the sidebar, at the top of every dashboard, and on the decision screen | Reduce memory load (cognitive load theory) |
+| Pattern names were jargon at the moment of choosing | "What do these patterns mean?" beside the pattern menu, with the primer's one-sentence explanation for each | Pre-training and just-in-time support (Mayer) |
+| The dashboard checklist appeared only after submitting | "Checks to run before you submit" in the observation panel, plus "How to read these charts" at the top of each dashboard | Job aids for novices; scaffolding |
+| Scenario 3 left novices with no help at all | Two counted hints on request; still no walkthrough or highlights, so support still fades | Scaffolding and fading; expertise reversal |
+
+A switch away from Python and Streamlit (for example, to a JavaScript front end for direct chart annotation) was
+considered and set aside for this term because of the timeline and scope; it is noted as future work.
 
 ## Known limitations (candidates for future work)
 

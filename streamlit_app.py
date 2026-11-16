@@ -69,6 +69,31 @@ def plain(text: str) -> str:
     return text.replace("\\$", "$")
 
 
+PRODUCTS = pd.DataFrame([
+    ["JT FlexBuy", C.md("$50 to $499.99"), "4 monthly installments", "0% interest, no fee"],
+    ["JT FlexBuy Plus", C.md("$500 and above"), "4 monthly installments", "0% interest, 4.5% fee"],
+    ["JT FlexBuy Plan", C.md("$500 and above"), "6, 12, or 24 monthly installments",
+     "Fixed interest rate (illustrative 15.99% APR)"],
+], columns=["Product", "Purchase size", "Structure", "Cost to customer"]).set_index("Product")
+
+
+def products_expander(where=st, expanded: bool = False) -> None:
+    """Product terms available during the exercises, not only on the start page (learner feedback)."""
+    exp = where.expander("The three JT FlexBuy products", expanded=expanded)
+    exp.table(PRODUCTS)
+    exp.caption("All terms are illustrative. Other card products, such as a credit card at about 24% APR, "
+                "are part of the bank's wider business.")
+
+
+def patterns_expander(where=st, label: str = "What do these patterns mean?") -> None:
+    """Plain-language meaning of each pattern, from the primer, so novices can choose without guessing."""
+    exp = where.expander(label)
+    for issue, name in ISSUES.items():
+        lid = LESSON_FOR_ISSUE.get(issue)
+        meaning = LESSONS[lid]["one_line"] if lid else ""
+        exp.markdown(f"**{name}.** {meaning}")
+
+
 def glossary_expander(where=st) -> None:
     exp = where.expander("Glossary")   # pre-training: key terms available before and during the scenarios
     for term, meaning in COMMON["glossary"].items():
@@ -88,6 +113,7 @@ def sidebar() -> str:
         st.sidebar.markdown(f"{'**Done**' if done else STAGE_LABELS[STAGES.index(stg)]} · {s['title'].split(':')[0]}")
     st.sidebar.divider()
     glossary_expander(st.sidebar)
+    products_expander(st.sidebar)
     st.sidebar.caption("Progress is kept only while this browser tab is open. "
                        "Download your activity log before closing the tab.")
     st.sidebar.download_button("Download activity log (CSV)", to_csv(), "metric_lab_log.csv",
@@ -109,12 +135,7 @@ def start_page() -> None:
             "go straight to Scenario 1 and come back to a lesson whenever the review points you to one.")
     st.button(f"Open {PRIMER_PAGE}", key="start_primer", on_click=lambda: st.session_state.update(page=PRIMER_PAGE))
     st.subheader("The three JT FlexBuy products")
-    st.table(pd.DataFrame([
-        ["JT FlexBuy", C.md("$50 to $499.99"), "4 monthly installments", "0% interest, no fee"],
-        ["JT FlexBuy Plus", C.md("$500 and above"), "4 monthly installments", "0% interest, 4.5% fee"],
-        ["JT FlexBuy Plan", C.md("$500 and above"), "6, 12, or 24 monthly installments",
-         "Fixed interest rate (illustrative 15.99% APR)"],
-    ], columns=["Product", "Purchase size", "Structure", "Cost to customer"]).set_index("Product"))
+    st.table(PRODUCTS)
     st.caption("All product terms are illustrative and do not describe any real institution's products.")
 
     st.subheader("The measurement flywheel: adoption, engagement, value")
@@ -131,17 +152,17 @@ def start_page() -> None:
     st.subheader("How each scenario works")
     st.write("1. **Choose and define metrics:** sort candidate metrics into success, guardrail, or vanity, then "
              "build one metric yourself.\n"
-             "2. **Read the dashboard:** flag anything misleading and say what kind of issue it is. Before "
-             "submitting, say how sure you are that you found everything. Some charts have nothing wrong with them.\n"
+             "2. **Read the dashboard:** record observations: mark the weeks where something looks misleading "
+             "and choose the pattern that explains it. Before submitting, say how sure you are that you spotted "
+             "everything. Some charts have nothing wrong with them.\n"
              "3. **Decide and justify:** recommend ship, iterate, or roll back, then compare your reasoning with "
              "an expert's.")
-    st.info("Support fades as you go. Scenario 1 is a worked example, Scenario 2 offers hints on request, and "
-            "Scenario 3 leaves you on your own. Plan on 10 to 20 minutes per scenario.")
+    st.info("Support fades as you go. Scenario 1 is a worked example with hints, Scenario 2 offers hints on "
+            "request, and Scenario 3 has no walkthrough but still offers a few hints if you get stuck. Plan on 10 "
+            "to 20 minutes per scenario.")
     c1, c2 = st.columns(2)
     with c1:
-        with st.expander("Issue types you can flag"):
-            for label in ISSUES.values():
-                st.write(f"- {label}")
+        patterns_expander(st, "Patterns to look for")
     with c2:
         glossary_expander()
 
@@ -291,7 +312,7 @@ def _on_chart_select(sid: str, chart_id: str, key: str) -> None:
         title = plain({c["id"]: c for c in C.scenario(sid)["charts"]}[chart_id]["title"])
         # Visible confirmation: in testing, the form filled in off-screen and the drag looked broken.
         st.session_state[f"{sid}_sel_msg"] = (f"Selected weeks {weeks[0]}–{weeks[1]} on \"{title}\". "
-                                              "Now choose the issue type in the flag panel.")
+                                              "Now choose the pattern in the observation panel.")
         log(sid, "dashboard", "chart_selection", chart=chart_id, weeks=weeks)
 
 
@@ -301,7 +322,7 @@ def _add_flag(sid: str) -> None:
     w0, w1 = st.session_state.get(f"{sid}_f_w0"), st.session_state.get(f"{sid}_f_w1")
     if w0 is None or w1 is None or not issue:
         st.session_state[f"{sid}_f_error"] = ("Mark the weeks (drag across them on a chart, or pick them) and choose "
-                                              "an issue type before adding the flag.")
+                                              "a pattern before adding the observation.")
         return
     st.session_state.pop(f"{sid}_f_error", None)
     fl = S.Flag(st.session_state[f"{sid}_f_chart"], (w0, w1),
@@ -337,6 +358,12 @@ def stage_dashboard(sc: dict) -> None:
                                          segment=st.session_state[f"{sid}_seg"]))
     if sc.get("segment_note"):
         st.caption(sc["segment_note"])
+    a1, a2 = st.columns(2)
+    with a1:
+        with st.expander("How to read these charts"):
+            st.write(PRIMER["how_to_read"])
+    with a2:
+        products_expander(st)
 
     if not submitted and sc["support"]["walkthrough_traps"]:
         with st.container(border=True):
@@ -366,8 +393,9 @@ def stage_dashboard(sc: dict) -> None:
         _sticky_panel_css(sid)
         left, right = st.columns([1.6, 1], gap="medium")
         with left:
-            st.caption("To flag something, drag a box across the weeks of interest on a chart (or click a point). "
-                       "The flag panel fills in automatically. Some charts may show nothing unusual.")
+            st.caption("To record an observation, drag a box across the weeks where something looks off (or "
+                       "click a point). The observation panel fills in automatically. Some charts show nothing "
+                       "unusual.")
             _charts(sc, charts, seg, shades, interactive=True, n_cols=1)
         with right:
             with st.container(border=True, key=f"{sid}_flagpanel"):
@@ -430,7 +458,7 @@ def _sticky_panel_css(sid: str) -> None:
 
 def _flag_builder(sc: dict, charts: dict) -> None:
     sid, stt = sc["id"], state(sc["id"])
-    st.markdown("**Add a flag**")
+    st.markdown("**Record an observation**")
     st.session_state.setdefault(f"{sid}_f_chart", next(iter(charts)))
     st.session_state.setdefault(f"{sid}_f_w0", None)   # no default: an untouched 1-12 range was credited
     st.session_state.setdefault(f"{sid}_f_w1", None)   # as a correct flag in live testing
@@ -441,15 +469,16 @@ def _flag_builder(sc: dict, charts: dict) -> None:
     w0, w1 = st.columns(2)
     w0.selectbox("From week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w0")
     w1.selectbox("To week", list(range(1, 13)), index=None, placeholder="Week", key=f"{sid}_f_w1")
-    st.selectbox("What kind of issue is it?", list(ISSUES), format_func=ISSUES.get, index=None,
-                 placeholder="Choose an issue type", key=f"{sid}_f_issue")
-    st.button("Add flag", on_click=_add_flag, args=(sid,), key=f"{sid}_add", width="stretch")
+    st.selectbox("Which pattern explains it?", list(ISSUES), format_func=ISSUES.get, index=None,
+                 placeholder="Choose a pattern", key=f"{sid}_f_issue")
+    patterns_expander(st)
+    st.button("Add observation", on_click=_add_flag, args=(sid,), key=f"{sid}_add", width="stretch")
     if err := st.session_state.get(f"{sid}_f_error"):
         st.warning(err)
 
-    st.markdown(f"**Your flags ({len(stt['flags'])})**")
+    st.markdown(f"**Your observations ({len(stt['flags'])})**")
     if not stt["flags"]:
-        st.caption("No flags yet.")
+        st.caption("None yet.")
     for fl in stt["flags"]:
         st.write(f"{charts[fl.chart]['title']} · weeks {fl.weeks[0]}–{fl.weeks[1]} · {ISSUES[fl.issue]}")
         st.button("Remove", key=f"{sid}_rm_{fl.meta['id']}", on_click=_remove_flag, args=(sid, fl.meta["id"]))
@@ -485,13 +514,15 @@ def _submit_flags(sc: dict, traps: list[dict]) -> None:
     sid, stt = sc["id"], state(sc["id"])
     st.divider()
     confirm_empty = True
+    with st.expander("Checks to run before you submit"):   # job aid for novices, not only after the fact
+        st.write("\n".join(f"- {item}" for item in COMMON["process_checklist"]))
     if not stt["flags"]:
-        confirm_empty = st.checkbox("I have reviewed the dashboard and found nothing worth flagging.",
+        confirm_empty = st.checkbox("I have reviewed the dashboard and found nothing worth noting.",
                                     key=f"{sid}_none_ok")
     coverage = st.radio("One question before you submit: how sure are you that you have found every issue on this "
                         "dashboard?", CONF_LEVELS, index=None, horizontal=True, format_func=lambda v: f"{v}%",
                         key=f"{sid}_cov")
-    if st.button("Submit my flags for review", type="primary", key=f"{sid}_submit", disabled=not confirm_empty):
+    if st.button("Submit my observations for review", type="primary", key=f"{sid}_submit", disabled=not confirm_empty):
         if coverage is None:
             st.warning("Rate how confident you are that you found every issue before submitting.")
             return
@@ -518,8 +549,8 @@ def _lesson_link(issue: str, key: str) -> None:
                   on_click=lambda: st.session_state.update(page=PRIMER_PAGE, primer_focus=lid))
 
 
-OUTCOME_TEXT = {"correct": "Correct", "partial": "Right place, different issue",
-                "false_alarm": "False alarm", "duplicate": "Duplicate of another flag"}
+OUTCOME_TEXT = {"correct": "Spotted and named", "partial": "Spotted",
+                "false_alarm": "Not supported by the data", "duplicate": "Same as another observation"}
 
 
 def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
@@ -527,28 +558,36 @@ def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
     by_id = {t["id"]: t for t in traps}
     st.subheader("Review")
     a, b, c = st.columns(3)
-    a.metric("Issues found", f"{res['detected']} of {res['n_traps']}")
-    b.metric("Partly right", res["partial"])
-    c.metric("False alarms", res["false_alarms"])
+    spotted = res.get("spotted", res["detected"] + res["partial"])
+    a.metric("Issues spotted", f"{spotted} of {res['n_traps']}",
+             help="You marked the right chart and weeks.")
+    b.metric("Named precisely", f"{res['detected']} of {res['n_traps']}",
+             help="You also chose the pattern that best explains it.")
+    c.metric("Not supported by the data", res["false_alarms"])
     g = res.get("guided")
     if g and g["guided_total"]:
-        st.caption(f"Found on your own: {g['independent_found']} of {g['independent_total']}. "
-                   f"Found with the walkthrough: {g['guided_found']} of {g['guided_total']}.")
+        st.caption(f"Spotted on your own: {g['independent_found']} of {g['independent_total']}. "
+                   f"Spotted with the walkthrough: {g['guided_found']} of {g['guided_total']}.")
     for s in res["scored"]:
         fl, out = s["flag"], s["outcome"]
         head = (f"**{OUTCOME_TEXT[out]}:** {charts[fl.chart]['title']}, weeks {fl.weeks[0]}–{fl.weeks[1]}, "
                 f"{ISSUES[fl.issue]}.")
-        if out in ("correct", "partial"):
+        if out == "correct":
             t = by_id[s["trap_id"]]
-            extra = "" if out == "correct" else f" The issue here is: *{ISSUES[t['issue']]}*."
-            (st.success if out == "correct" else st.warning)(f"{head}{extra} {t['explanation']}")
+            note = f" {t['accept_note']}" if fl.issue != t["issue"] and t.get("accept_note") else ""
+            st.success(f"{head}{note} {t['explanation']}")
+        elif out == "partial":   # located correctly: credit it, and treat the name as room for improvement
+            t = by_id[s["trap_id"]]
+            st.info(f"{head} You found the right place. Room to improve: a more precise name for this pattern is "
+                    f"*{ISSUES[t['issue']]}*. {t['explanation']}")
+            _lesson_link(t["issue"], f"{sid}_lesson_p_{t['id']}")
         elif out == "duplicate":
             t = by_id[s["trap_id"]]
             if fl.issue != t["issue"]:
-                st.warning(head + " This covers an issue you already found, but with a different diagnosis. "
-                           f"The issue here is: *{ISSUES[t['issue']]}*.")
+                st.info(head + " This covers something you already spotted, with a different pattern. "
+                        f"The best fit here is: *{ISSUES[t['issue']]}*.")
             else:
-                st.info(head + " This issue was already credited to another flag.")
+                st.info(head + " This was already credited to another observation.")
         else:
             st.warning(head + " Nothing misleading was planted here. Not every movement on a chart is a problem; "
                             "ask whether the change is larger than normal week-to-week noise.")
@@ -558,8 +597,8 @@ def _flag_review(sc: dict, charts: dict, traps: list[dict], res: dict) -> None:
         _lesson_link(t["issue"], f"{sid}_lesson_{t['id']}")
     st.markdown("**Confidence check**")
     if not res["scored"]:
-        st.write("You did not submit any flags, so the review above shows every planted issue.")
-    if msg := S.coverage_message(stt.get("coverage"), res["detected"], res["n_traps"]):
+        st.write("You did not record any observations, so the review above shows every planted issue.")
+    if msg := S.coverage_message(stt.get("coverage"), spotted, res["n_traps"]):
         st.write(msg)
     with st.container(border=True):   # process-level feedback (Hattie & Timperley)
         st.markdown("**Checks to run on any dashboard**")
@@ -591,6 +630,7 @@ def stage_decision(sc: dict) -> None:
     d = sc["decision"]
     done = stt["decision"] is not None
     _findings_panel(sc)
+    products_expander(st)
     st.write(d["question"])
     st.caption("In plain words: **ship** means " + COMMON["decision_plain"]["ship"] + " **Iterate** means "
                + COMMON["decision_plain"]["iterate"] + " **Roll back** means " + COMMON["decision_plain"]["rollback"])
@@ -678,13 +718,13 @@ def stage_summary(sc: dict) -> None:
     a.metric("Metric built", f"{stt['define']['n_correct']}/{stt['define']['n_total']} parts")
     g = fr.get("guided") or {}
     if g.get("guided_total"):
-        b.metric("Issues found on your own", f"{g['independent_found']}/{g['independent_total']}",
+        b.metric("Spotted on your own", f"{g['independent_found']}/{g['independent_total']}",
                  help=f"Plus {g['guided_found']} of {g['guided_total']} found with the walkthrough.")
     else:
-        b.metric("Issues found", f"{fr['detected']}/{fr['n_traps']}",
-                 help="Partly right flags and false alarms are listed on the dashboard review.")
-    c.metric("Confidence vs. results", S.coverage_label(stt["coverage"], fr["detected"], fr["n_traps"]),
-             help=S.coverage_message(stt["coverage"], fr["detected"], fr["n_traps"]) or None)
+        b.metric("Issues spotted", f"{_spotted(fr)}/{fr['n_traps']}",
+                 help="Observations named differently, and any not supported by the data, are listed on the dashboard review.")
+    c.metric("Confidence vs. results", S.coverage_label(stt["coverage"], _spotted(fr), fr["n_traps"]),
+             help=S.coverage_message(stt["coverage"], _spotted(fr), fr["n_traps"]) or None)
     d.metric("Decision", DECISIONS[dr["choice"]].split(":")[0], help=dr["decision_feedback"])
     minutes = sum(stt["times"].values()) / 60
     st.write(f"Hints used: {len(stt['hints'])}. Time on this scenario: about {minutes:.0f} min. "
@@ -737,12 +777,16 @@ def results_page() -> None:
         fr = stt["flag_result"]
         rows.append([sc["title"], "Done", f"{stt['sort']['n_correct']}/{stt['sort']['n_total']}",
                      f"{stt['define']['n_correct']}/{stt['define']['n_total']}",
-                     f"{fr['detected']}/{fr['n_traps']}",
-                     f"{stt['coverage']}% sure · {S.coverage_label(stt['coverage'], fr['detected'], fr['n_traps'])}"])
-    st.table(pd.DataFrame(rows, columns=["Scenario", "Status", "Metrics sorted", "Metric built", "Issues found",
+                     f"{_spotted(fr)}/{fr['n_traps']}",
+                     f"{stt['coverage']}% sure · {S.coverage_label(stt['coverage'], _spotted(fr), fr['n_traps'])}"])
+    st.table(pd.DataFrame(rows, columns=["Scenario", "Status", "Metrics sorted", "Metric built", "Issues spotted",
                                          "Sure you found everything?"]).set_index("Scenario"))
     _confidence_pattern()
     st.download_button("Download activity log (CSV)", to_csv(), "metric_lab_log.csv", "text/csv", key="dl_results")
+
+
+def _spotted(fr: dict) -> int:
+    return fr.get("spotted", fr["detected"] + fr["partial"])
 
 
 def _confidence_pattern() -> None:
@@ -755,11 +799,10 @@ def _confidence_pattern() -> None:
         fr = stt["flag_result"]
         by_id = {t["id"]: t for t in C.traps(sc["id"])}
         guided = set(sc["support"]["walkthrough_traps"])   # walkthrough finds show guidance working, not skill
-        found = {s["trap_id"] for s in fr["scored"] if s["outcome"] == "correct"} - guided
+        found = {s["trap_id"] for s in fr["scored"] if s["outcome"] in ("correct", "partial")} - guided
         rows.append({"scenario": sc["title"].split(":")[0], "coverage": stt["coverage"],
                      "found_issues": [by_id[t]["issue"] for t in found],
-                     "missed_issues": [t["issue"] for t in fr["missed"]] +
-                                      [by_id[s["trap_id"]]["issue"] for s in fr["scored"] if s["outcome"] == "partial"]})
+                     "missed_issues": [t["issue"] for t in fr["missed"]]})
     if not rows:
         st.caption("Finish a scenario to see which ideas you have shown and which to review.")
         return

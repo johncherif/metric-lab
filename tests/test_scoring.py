@@ -306,3 +306,35 @@ def test_default_full_range_flag_does_not_match_late_trap():
     # Found live: an untouched form (weeks 1-12) was credited on a weeks 5-12 trap.
     assert match_flag(f("rate", 1, 12, "base_changed"), TRAPS)[0] is None
     assert match_flag(f("rate", 4, 12, "base_changed"), TRAPS)[0]["id"] == "t_base"   # a slightly wide drag still counts
+
+
+def test_pending_selection_is_drawn_as_shading():
+    import pandas as pd
+    from metric_lab.charts import figure
+    frame = pd.DataFrame({"week": range(1, 13), "Rate": [0.01] * 12})
+    chart = {"title": "t", "yfmt": ".1%", "series": [{"label": "Rate"}]}
+    fig = figure(frame, chart, [([5, 12], "pending")])
+    texts = [a.text for a in fig.layout.annotations]
+    assert "Your selection" in texts
+
+
+# ---------------- Nov 15 learner feedback: partial credit and accepted alternatives
+def test_spotted_counts_partial_and_correct():
+    r = score_flags([f("rate", 5, 12, "novelty"), f("optout", 5, 12, "guardrail")], TRAPS)
+    assert r["detected"] == 1 and r["partial"] == 1 and r["spotted"] == 2
+
+
+def test_also_accept_counts_as_correct():
+    traps = [{"id": "lag", "charts": ["fpd"], "weeks": [7, 12], "issue": "lagging", "also_accept": ["guardrail"]}]
+    assert score_flags([f("fpd", 7, 12, "guardrail")], traps)["scored"][0]["outcome"] == "correct"
+    assert score_flags([f("fpd", 7, 12, "novelty")], traps)["scored"][0]["outcome"] == "partial"
+
+
+def test_scenario3_default_rate_accepts_guardrail():
+    lag = next(t for t in C.traps("scenario3") if t["id"] == "s3_lagging")
+    assert "guardrail" in lag["also_accept"] and lag["accept_note"]
+
+
+def test_split_guided_counts_spotted():
+    r = score_flags([f("rate", 5, 12, "novelty")], TRAPS)
+    assert split_guided(r, [], TRAPS)["independent_found"] == 1

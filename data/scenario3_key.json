@@ -12,7 +12,11 @@
       ],
       "issue": "lagging",
       "title": "Early defaults are rising in near-prime FlexBuy Plan, while charge-offs still read zero",
-      "explanation": "Charge-offs cannot appear until about 120 days past due, so a zero charge-off rate 12 weeks after launch says nothing about credit quality. The early-warning signal is the first-payment default rate: for near-prime FlexBuy Plan customers it rose from about 1.8% to over 6% by week 12. Filter to 'Near-prime (below 720)' to see it clearly."
+      "explanation": "Charge-offs cannot appear until about 120 days past due, so a zero charge-off rate 12 weeks after launch says nothing about credit quality. The early-warning signal is the first-payment default rate: for near-prime FlexBuy Plan customers it rose from about 1.8% to over 6% by week 12. Filter to 'Near-prime (below 720)' to see it clearly.",
+      "also_accept": [
+        "guardrail"
+      ],
+      "accept_note": "Yes: the first-payment default rate is a guardrail, and it is getting worse. The sharper name is a lagging-indicator pattern: losses (charge-offs) appear months later, so this early signal is the one to act on now."
     },
     {
       "id": "s3_cannibal",

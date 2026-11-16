@@ -182,6 +182,10 @@ def scenario3(seed: int = 6462):
     data = pd.DataFrame(rows)
     traps = [
         dict(id="s3_lagging", charts=["fpd_rate", "chargeoff_rate"], weeks=[7, 12], issue="lagging",
+             also_accept=["guardrail"],
+             accept_note=("Yes: the first-payment default rate is a guardrail, and it is getting worse. The sharper "
+                          "name is a lagging-indicator pattern: losses (charge-offs) appear months later, so this early "
+                          "signal is the one to act on now."),
              title="Early defaults are rising in near-prime FlexBuy Plan, while charge-offs still read zero",
              explanation=("Charge-offs cannot appear until about 120 days past due, so a zero charge-off rate 12 weeks "
                           "after launch says nothing about credit quality. The early-warning signal is the "

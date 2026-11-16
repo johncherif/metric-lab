@@ -110,12 +110,12 @@ def test_full_scenario_flow(sc):
     _btn(at, f"{sid}_submit").click().run()
     assert not at.exception
     assert any(f"{len(traps)} of {len(traps)}" in m.value for m in at.metric)
-    assert any("Duplicate" in m.value for m in list(at.info) + list(at.warning))
-    assert any("False alarm" in e.value for e in at.warning)
+    assert any("Same as another observation" in m.value for m in list(at.info) + list(at.warning))
+    assert any("Not supported by the data" in e.value for e in at.warning)
     assert any("Checks to run on any dashboard" in m.value for m in at.markdown)
-    assert any("sure you had found every issue" in m.value for m in at.markdown)
+    assert any("sure you had spotted everything" in m.value for m in at.markdown)
     if sc["support"]["walkthrough_traps"]:
-        assert any("Found on your own" in c.value for c in at.caption)
+        assert any("Spotted on your own" in c.value for c in at.caption)
     _btn(at, f"{sid}_go_dec").click().run()
 
     # Stage 3: findings panel, validation, full answer, exemplars, rubric
@@ -175,7 +175,7 @@ def test_submit_with_no_flags_requires_confirmation():
     at.radio(key=f"{sid}_cov").set_value(50).run()
     _btn(at, f"{sid}_submit").click().run()
     assert not at.exception
-    assert any("did not submit any flags" in m.value for m in at.markdown)
+    assert any("did not record any observations" in m.value for m in at.markdown)
 
 
 def test_primer_lessons_and_checks():
@@ -269,3 +269,36 @@ def test_selection_confirmation_is_shown_as_toast():
     assert not at.exception
     assert any("Selected weeks 5–12" in t.value for t in at.toast)
     assert not any("No weeks selected yet" in c.value for c in at.caption)
+
+
+def test_partial_is_shown_as_spotted_with_room_to_improve():
+    sc = next(s for s in SCENARIOS if s["id"] == "scenario3")
+    sid = sc["id"]
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.sidebar.radio(key="page").set_value(sc["title"]).run()
+    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
+    at.run()
+    assert _has_btn(at, f"{sid}_hint")                                  # Scenario 3 now offers hints
+    cann = next(t for t in _key(sid) if t["id"] == "s3_cannibal")
+    lag = next(t for t in _key(sid) if t["id"] == "s3_lagging")
+    _add_flag(at, sid, cann["charts"][0], tuple(cann["weeks"]), "guardrail")   # right place, other name
+    _add_flag(at, sid, lag["charts"][0], tuple(lag["weeks"]), "guardrail")     # accepted alternative
+    at.radio(key=f"{sid}_cov").set_value(80).run()
+    _btn(at, f"{sid}_submit").click().run()
+    assert not at.exception
+    metrics = {m.label: m.value for m in at.metric}
+    assert metrics["Issues spotted"] == "2 of 2" and metrics["Named precisely"] == "1 of 2"
+    assert any(i.value.startswith("**Spotted:**") and "Room to improve" in i.value for i in at.info)
+    assert any("default rate is a guardrail" in s.value for s in at.success)
+
+
+def test_products_reference_available_during_exercises():
+    sc = SCENARIOS[0]
+    sid = sc["id"]
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.sidebar.radio(key="page").set_value(sc["title"]).run()
+    at.session_state[f"sc_{sid}"]["stage"] = "dashboard"
+    at.run()
+    labels = [e.label for e in at.expander]
+    assert labels.count("The three JT FlexBuy products") >= 2          # sidebar and dashboard
+    assert "What do these patterns mean?" in labels and "How to read these charts" in labels

@@ -4,11 +4,11 @@
   "title": "Scenario 3: Value",
   "layer": "Value",
   "support": {
-    "label": "No support",
+    "label": "A few hints, no walkthrough",
     "walkthrough_traps": [],
     "highlight_traps": [],
-    "hints": false,
-    "description": "You are on your own: no walkthrough, no highlights, and no hints. Not every chart has a problem."
+    "hints": true,
+    "description": "No walkthrough or highlights. Two hints are available if you get stuck; try a first look on your own, since hints are counted. Not every chart has a problem."
   },
   "briefing": {
     "from": "Priya Shah, Finance Business Partner, JT Morgan",
@@ -166,7 +166,10 @@
     }
   ],
   "walkthrough": {},
-  "hints": {},
+  "hints": {
+    "s3_lagging": "Ask of every good-looking number: could it possibly have changed yet? Then look for an earlier warning sign, and try the 'Near-prime' segment.",
+    "s3_cannibal": "Growth can be old business moving. What happened to the same customers' credit card interest after they took a FlexBuy Plan?"
+  },
   "decision": {
     "question": "Should JT Morgan expand FlexBuy Plan to all near-prime customers next quarter?",
     "options": {
