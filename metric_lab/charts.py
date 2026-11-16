@@ -9,6 +9,7 @@ SHADE = {
     "guide": ("rgba(230,159,0,0.18)", "Analyst: look here"),
     "found": ("rgba(0,158,115,0.16)", "You found this"),
     "missed": ("rgba(213,94,0,0.18)", "Missed"),
+    "pending": ("rgba(0,114,178,0.16)", "Your selection"),   # weeks marked but not yet flagged
 }
 
 
